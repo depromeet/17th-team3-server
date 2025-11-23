@@ -21,7 +21,7 @@ services:
     container_name: ngrinder-controller
     restart: unless-stopped
     ports:
-      - "16001:80"      # nGrinder 웹 콘솔 (HTTP)
+      - "8000:80"      # nGrinder 웹 콘솔 (HTTP)
       - "16010:16001"   # 에이전트 제어 포트
     environment:
       - TZ=Asia/Seoul
@@ -39,9 +39,23 @@ services:
       - ngrinder-controller
     environment:
       - TZ=Asia/Seoul
-    command: ngrinder-controller:16001
+    command: ["ngrinder-controller:80"]
     volumes:
       - ./module-infrastructure/ngrinder/agent:/opt/ngrinder-agent
+    networks:
+      - ngrinder_network
+
+  ngrinder-agent-2:
+    image: ngrinder/agent:3.5.9
+    container_name: ngrinder-agent-2
+    restart: unless-stopped
+    depends_on:
+      - ngrinder-controller
+    environment:
+      - TZ=Asia/Seoul
+    command: ["ngrinder-controller:80"]
+    volumes:
+      - ./module-infrastructure/ngrinder/agent-2:/opt/ngrinder-agent
     networks:
       - ngrinder_network
 

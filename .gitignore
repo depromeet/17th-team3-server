@@ -62,4 +62,10 @@ out/
 
 # nginx auth files
 module-infra/nginx/.htpasswd
+
+# nGrinder controller data
 module-infrastructure/ngrinder/controller/
+
+# nGrinder agent data (Docker 볼륨 마운트용 - 내용물은 Git 추적 제외)
+module-infrastructure/ngrinder/agent/
+module-infrastructure/ngrinder/agent-2/
