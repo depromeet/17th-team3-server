@@ -66,6 +66,7 @@ up-ngrinder:
 	@echo "Starting nGrinder controller and agent..."
 	@mkdir -p module-infrastructure/ngrinder/controller
 	@mkdir -p module-infrastructure/ngrinder/agent
+	@mkdir -p module-infrastructure/ngrinder/agent-2
 	$(DOCKER_COMPOSE) -f $(COMPOSE_NGRINDER) up -d
 	@echo "nGrinder web console: http://localhost:16001"
 
