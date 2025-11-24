@@ -332,20 +332,21 @@ pipeline {
                                 docker push \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag}
                                 docker push \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest
                             """
+                        }
 
-                            # Cleanup
-                            sh """
+                        // 로컬 이미지 정리
+                        sh """
+                            REGISTRY_IP=\$(docker inspect registry \
+                              --format='{{ if index .NetworkSettings.Networks "depromeet_cicd_network" }}{{ (index .NetworkSettings.Networks "depromeet_cicd_network").IPAddress }}{{ end }}')
+
+                            if [ -z "\$REGISTRY_IP" ]; then
                                 REGISTRY_IP=\$(docker inspect registry \
-                                  --format='{{ if index .NetworkSettings.Networks "depromeet_cicd_network" }}{{ (index .NetworkSettings.Networks "depromeet_cicd_network").IPAddress }}{{ end }}')
+                                  --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}')
+                            fi
 
-                                if [ -z "\$REGISTRY_IP" ]; then
-                                    REGISTRY_IP=\$(docker inspect registry \
-                                      --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}')
-                                fi
-
-                                docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag} || true
-                                docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest || true
-                            """
+                            docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag} || true
+                            docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest || true
+                        """
                     } else {
                         echo "Skipping Docker Build & Push - not main branch"
                     }
