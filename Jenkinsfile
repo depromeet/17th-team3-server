@@ -14,7 +14,7 @@ pipeline {
         
         // Registry 설정 (외부 접근용 HTTPS, 내부 푸시용 HTTP 분리)
         REGISTRY_URL = "registry.momuzzi.site:4430"          // Public pull용
-        REGISTRY_PUSH_URL = "registry:5000"                  // Internal push용 (컨테이너 이름)
+        REGISTRY_PUSH_URL = "172.19.0.2:5000"                // 내부 push용 (IP 고정)
         REGISTRY_CREDENTIALS_ID = "depromeet-registry"
         
         // Docker 이미지 설정
