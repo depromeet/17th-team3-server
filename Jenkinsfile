@@ -303,35 +303,49 @@ pipeline {
                             passwordVariable: 'REGISTRY_PASSWORD'
                         )]) {
                             sh """
-                                # Registry IP를 직접 사용 (DNS 문제 우회)
-                                REGISTRY_IP=\$(docker inspect registry --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+                                # 특정 네트워크에서 IP 가져오기 + 안전한 템플릿 처리
+                                REGISTRY_IP=\$(docker inspect registry \
+                                  --format='{{ if index .NetworkSettings.Networks "depromeet_cicd_network" }}{{ (index .NetworkSettings.Networks "depromeet_cicd_network").IPAddress }}{{ end }}')
+
+                                if [ -z "\$REGISTRY_IP" ]; then
+                                    # Fallback: 첫 번째 네트워크 IP
+                                    REGISTRY_IP=\$(docker inspect registry \
+                                      --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}')
+                                fi
+
                                 echo "Using Registry IP: \$REGISTRY_IP"
-                                
-                                # Docker 로그아웃 후 재로그인 (IP 직접 사용)
+
+                                # 재로그인
                                 docker logout \${REGISTRY_IP}:5000 || true
 
                                 echo "Attempting login to \${REGISTRY_IP}:5000 with user: \$REGISTRY_USERNAME"
                                 echo \$REGISTRY_PASSWORD | docker login \${REGISTRY_IP}:5000 -u \$REGISTRY_USERNAME --password-stdin
 
-                                # 이미지 태그를 IP로 변경
+                                # 이미지 태깅
                                 docker tag ${fullImageName}:${imageTag} \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag}
                                 docker tag ${fullImageName}:latest \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest
 
-                                # 이미지 정보 확인
-                                docker images | grep \${REGISTRY_IP}:5000/${IMAGE_NAME}
+                                # 이미지 확인 (grep 실패해도 Jenkins 실패 방지)
+                                docker images | grep \${REGISTRY_IP}:5000/${IMAGE_NAME} || true
 
-                                # Push 시도 (IP 직접 사용)
+                                # Push
                                 docker push \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag}
                                 docker push \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest
                             """
-                        }
 
-                        // 로컬 이미지 정리
-                        sh """
-                            REGISTRY_IP=\$(docker inspect registry --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
-                            docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag} || true
-                            docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest || true
-                        """
+                            # Cleanup
+                            sh """
+                                REGISTRY_IP=\$(docker inspect registry \
+                                  --format='{{ if index .NetworkSettings.Networks "depromeet_cicd_network" }}{{ (index .NetworkSettings.Networks "depromeet_cicd_network").IPAddress }}{{ end }}')
+
+                                if [ -z "\$REGISTRY_IP" ]; then
+                                    REGISTRY_IP=\$(docker inspect registry \
+                                      --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}')
+                                fi
+
+                                docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag} || true
+                                docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest || true
+                            """
                     } else {
                         echo "Skipping Docker Build & Push - not main branch"
                     }
