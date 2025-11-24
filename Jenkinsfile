@@ -303,49 +303,36 @@ pipeline {
                             passwordVariable: 'REGISTRY_PASSWORD'
                         )]) {
                             sh """
-                                # 특정 네트워크에서 IP 가져오기 + 안전한 템플릿 처리
-                                REGISTRY_IP=\$(docker inspect registry \
-                                  --format='{{ if index .NetworkSettings.Networks "depromeet_cicd_network" }}{{ (index .NetworkSettings.Networks "depromeet_cicd_network").IPAddress }}{{ end }}')
+                                # 컨테이너 이름 사용 (같은 네트워크에 있으므로 DNS 작동)
+                                # IP 사용 시 Docker가 HTTPS를 시도하는 문제를 피하기 위해 컨테이너 이름 사용
+                                REGISTRY_HOST="${REGISTRY_PUSH_URL}"
 
-                                if [ -z "\$REGISTRY_IP" ]; then
-                                    # Fallback: 첫 번째 네트워크 IP
-                                    REGISTRY_IP=\$(docker inspect registry \
-                                      --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}')
-                                fi
-
-                                echo "Using Registry IP: \$REGISTRY_IP"
+                                echo "Using Registry: \${REGISTRY_HOST}"
 
                                 # 재로그인
-                                docker logout \${REGISTRY_IP}:5000 || true
+                                docker logout \${REGISTRY_HOST} || true
 
-                                echo "Attempting login to \${REGISTRY_IP}:5000 with user: \$REGISTRY_USERNAME"
-                                echo \$REGISTRY_PASSWORD | docker login \${REGISTRY_IP}:5000 -u \$REGISTRY_USERNAME --password-stdin
+                                echo "Attempting login to \${REGISTRY_HOST} with user: \$REGISTRY_USERNAME"
+                                echo \$REGISTRY_PASSWORD | docker login \${REGISTRY_HOST} -u \$REGISTRY_USERNAME --password-stdin
 
                                 # 이미지 태깅
-                                docker tag ${fullImageName}:${imageTag} \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag}
-                                docker tag ${fullImageName}:latest \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest
+                                docker tag ${fullImageName}:${imageTag} \${REGISTRY_HOST}/${IMAGE_NAME}:${imageTag}
+                                docker tag ${fullImageName}:latest \${REGISTRY_HOST}/${IMAGE_NAME}:latest
 
                                 # 이미지 확인 (grep 실패해도 Jenkins 실패 방지)
-                                docker images | grep \${REGISTRY_IP}:5000/${IMAGE_NAME} || true
+                                docker images | grep \${REGISTRY_HOST}/${IMAGE_NAME} || true
 
                                 # Push
-                                docker push \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag}
-                                docker push \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest
+                                docker push \${REGISTRY_HOST}/${IMAGE_NAME}:${imageTag}
+                                docker push \${REGISTRY_HOST}/${IMAGE_NAME}:latest
                             """
                         }
 
                         // 로컬 이미지 정리
                         sh """
-                            REGISTRY_IP=\$(docker inspect registry \
-                              --format='{{ if index .NetworkSettings.Networks "depromeet_cicd_network" }}{{ (index .NetworkSettings.Networks "depromeet_cicd_network").IPAddress }}{{ end }}')
-
-                            if [ -z "\$REGISTRY_IP" ]; then
-                                REGISTRY_IP=\$(docker inspect registry \
-                                  --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}')
-                            fi
-
-                            docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:${imageTag} || true
-                            docker rmi \${REGISTRY_IP}:5000/${IMAGE_NAME}:latest || true
+                            REGISTRY_HOST="${REGISTRY_PUSH_URL}"
+                            docker rmi \${REGISTRY_HOST}/${IMAGE_NAME}:${imageTag} || true
+                            docker rmi \${REGISTRY_HOST}/${IMAGE_NAME}:latest || true
                         """
                     } else {
                         echo "Skipping Docker Build & Push - not main branch"
