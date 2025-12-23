@@ -12,6 +12,7 @@ services:
       - MYSQL_USER=${PROD_DB_USERNAME}
       - MYSQL_PASSWORD=${PROD_DB_PASSWORD}
       - MYSQL_URL=jdbc:mysql://${PROD_DB_ENDPOINT}:3306/${PROD_DB_NAME}
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0
     networks:
       - depromeet_network
     external_links:
@@ -23,11 +24,13 @@ services:
         max-size: "10m"
         max-file: "7"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
+    mem_limit: 1024m
+    mem_reservation: 512m
 
   nginx-app:
     container_name: nginx-app
@@ -56,6 +59,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    mem_limit: 256m
+    mem_reservation: 64m
 
 networks:
   depromeet_network:
