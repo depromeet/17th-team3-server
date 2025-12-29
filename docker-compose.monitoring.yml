@@ -68,7 +68,7 @@ services:
       - ./module-infrastructure/monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - ./module-infrastructure/monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
     environment:
-      - GF_SERVER_ROOT_URL=https://monitoring.momuzzi.site
+      - GF_SERVER_ROOT_URL=https://monitoring.ssolv.site
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PW}
       - GF_USERS_ALLOW_SIGN_UP=false
