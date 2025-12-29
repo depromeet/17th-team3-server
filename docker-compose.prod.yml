@@ -36,8 +36,7 @@ services:
     container_name: nginx-app
     image: nginx:1.29.0
     ports:
-      - "90:80"
-      - "443:443"
+      - "80:80"
     volumes:
       - ./module-infrastructure/nginx/nginx-app.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
@@ -55,7 +54,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-kf", "http://localhost" ]
+      test: [ "CMD", "curl", "-f", "http://localhost/stub_status" ]
       interval: 30s
       timeout: 10s
       retries: 3
