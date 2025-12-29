@@ -73,11 +73,11 @@ scrape_configs:
             
             # Grafana 로그인 및 API 요청 제외
             - drop:
-                expression: '.*monitoring\.momuzzi\.site.*(GET /login|GET /api/|POST /api/|GET /avatar/|GET /public/).*'
+                expression: '.*monitoring\.ssolv\.site.*(GET /login|GET /api/|POST /api/|GET /avatar/|GET /public/).*'
             
             # GitHub Webhook 로그 제외
             - drop:
-                expression: '.*(jenkins\.momuzzi\.site.*github-webhook|/github-webhook/).*'
+                expression: '.*(jenkins\.ssolv\.site.*github-webhook|/github-webhook/).*'
             
             # Let's Encrypt ACME challenge 로그 제외
             - drop:
