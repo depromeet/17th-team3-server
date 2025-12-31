@@ -1,25 +1,20 @@
-// 1. 메트릭 수집 (Prometheus 스타일)
-
-// Node Exporter 스크래핑
+// 1. 메트릭 수집
 prometheus.scrape "node_exporter" {
   targets    = [{"__address__" = "node-exporter:9100"}]
   forward_to = [prometheus.remote_write.grafana_cloud.receiver]
 }
 
-// Spring Boot Actuator 스크래핑
 prometheus.scrape "spring_boot" {
   targets    = [{"__address__" = "backend:8080"}]
   metrics_path = "/actuator/prometheus"
   forward_to = [prometheus.remote_write.grafana_cloud.receiver]
 }
 
-// Nginx Exporter 스크래핑
 prometheus.scrape "nginx_exporter" {
   targets    = [{"__address__" = "nginx-exporter:9113"}]
   forward_to = [prometheus.remote_write.grafana_cloud.receiver]
 }
 
-// Grafana Cloud로 메트릭 전송
 prometheus.remote_write "grafana_cloud" {
   endpoint {
     url = sys.env("GRAFANA_CLOUD_PROMETHEUS_URL")
@@ -30,51 +25,31 @@ prometheus.remote_write "grafana_cloud" {
   }
 }
 
-// 2. 로그 수집 (Loki 스타일)
-
-// Docker 컨테이너 탐색
+// 2. 로그 수집
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
 }
 
-// 컨테이너 메타데이터에서 이름 추출 및 라벨링 (중요 ⭐)
 discovery.relabel "docker_logs" {
   targets = discovery.docker.containers.targets
-
   rule {
     source_labels = ["__meta_docker_container_name"]
     regex         = "/(.*)"
     target_label  = "container"
   }
-  
-  rule {
-    source_labels = ["__meta_docker_container_name"]
-    regex         = "/(.*)"
-    target_label  = "job"
-  }
 }
 
-// Docker 소켓을 통해 로그 수집
 loki.source.docker "logs" {
   host      = "unix:///var/run/docker.sock"
   targets   = discovery.relabel.docker_logs.output
   forward_to = [loki.process.labels.receiver]
 }
 
-// 로그 가공 및 전송
 loki.process "labels" {
-  stage.docker { } // Docker 표준 로그 포맷 처리
-
-  stage.static_labels {
-    values = {
-      environment = "production",
-    }
-  }
-  
+  stage.docker { }
   forward_to = [loki.write.grafana_cloud.receiver]
 }
 
-// Grafana Cloud로 로그 전송
 loki.write "grafana_cloud" {
   endpoint {
     url = sys.env("GRAFANA_CLOUD_LOKI_URL")
@@ -83,4 +58,32 @@ loki.write "grafana_cloud" {
       password = sys.env("GRAFANA_CLOUD_API_KEY")
     }
   }
+}
+
+// 3. 트레이싱 수집
+
+// OTLP 수신기 (애플리케이션에서 보낸 데이터 받기)
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+  output {
+    traces  = [otelcol.exporter.otlp.grafana_cloud.input]
+  }
+}
+
+// Grafana Cloud Tempo로 전송
+otelcol.exporter.otlp "grafana_cloud" {
+  client {
+    endpoint = sys.env("GRAFANA_CLOUD_TEMPO_URL")
+    auth     = otelcol.auth.basic.grafana_cloud.handler
+  }
+}
+
+otelcol.auth.basic "grafana_cloud" {
+  username = sys.env("GRAFANA_CLOUD_TEMPO_USER")
+  password = sys.env("GRAFANA_CLOUD_API_KEY")
 }

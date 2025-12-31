@@ -24,7 +24,10 @@ management:
         include: health,info,metrics,prometheus
   tracing:
     sampling:
-      probability: 1.0
+      probability: 0.1
+  otlp:
+    tracing:
+      endpoint: http://alloy:4317
   prometheus:
     metrics:
       export:
