@@ -60,7 +60,7 @@ loki.write "grafana_cloud" {
   }
 }
 
-// 3. 트레이싱 수집 (디버깅 로그 추가 ⭐)
+// 3. 트레이싱 수집
 
 // OTLP 수신기
 otelcol.receiver.otlp "default" {
@@ -80,13 +80,13 @@ otelcol.processor.batch "default" {
   output {
     traces  = [
       otelcol.exporter.otlp.grafana_cloud.input,
-      otelcol.exporter.logging.debug.input, // 로그에 트레이스 정보 출력
+      otelcol.exporter.debug.default.input,
     ]
   }
 }
 
 // 디버깅용 로그 출력
-otelcol.exporter.logging "debug" {
+otelcol.exporter.debug "default" {
   verbosity = "normal"
 }
 
