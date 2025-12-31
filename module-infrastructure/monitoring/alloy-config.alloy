@@ -32,32 +32,53 @@ prometheus.remote_write "grafana_cloud" {
 
 // 2. 로그 수집 (Loki 스타일)
 
-// Docker 컨테이너 자동 탐색
+// Docker 컨테이너 정보 탐색
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
 }
 
-// 컨테이너 이름을 'container' 라벨로 변환
+// 컨테이너 메타데이터에서 이름 추출 및 라벨링
 discovery.relabel "docker_logs" {
   targets = discovery.docker.containers.targets
 
+  // 컨테이너 이름을 'container' 라벨로 저장
   rule {
     source_labels = ["__meta_docker_container_name"]
     regex         = "/(.*)"
     target_label  = "container"
   }
+
+  // 'job' 라벨 추가 (기본값)
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "job"
+  }
 }
 
-// 탐색된 컨테이너에서 로그 수집
-loki.source.docker "logs" {
-  host      = "unix:///var/run/docker.sock"
-  targets   = discovery.relabel.docker_logs.output
+// 로그 파일 읽기
+loki.source.file "logs" {
+  targets    = discovery.relabel.docker_logs.output
   forward_to = [loki.process.labels.receiver]
 }
 
-// 로그 라벨 정리 및 JSON 파싱
+// 로그 가공 및 전송
 loki.process "labels" {
-  stage.docker { } // Docker 표준 로그 포맷(JSON) 자동 처리
+  stage.docker { } // Docker 표준 로그 포맷 처리
+
+  // 로그가 JSON인 경우 내부 필드 추출 (선택 사항)
+  stage.json {
+    expressions = {
+      level  = "level",
+      msg    = "message",
+    }
+  }
+
+  stage.labels {
+    values = {
+      level = null,
+    }
+  }
 
   stage.static_labels {
     values = {
