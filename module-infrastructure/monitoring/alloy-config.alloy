@@ -78,16 +78,8 @@ otelcol.receiver.otlp "default" {
 // 배치 처리
 otelcol.processor.batch "default" {
   output {
-    traces  = [
-      otelcol.exporter.otlp.grafana_cloud.input,
-      otelcol.exporter.debug.default.input,
-    ]
+    traces  = [otelcol.exporter.otlp.grafana_cloud.input]
   }
-}
-
-// 디버깅용 로그 출력
-otelcol.exporter.debug "default" {
-  verbosity = "normal"
 }
 
 // Grafana Cloud Tempo로 전송
