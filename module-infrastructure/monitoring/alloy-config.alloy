@@ -37,10 +37,21 @@ discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
 }
 
+// 컨테이너 이름을 'container' 라벨로 변환
+discovery.relabel "docker_logs" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+}
+
 // 탐색된 컨테이너에서 로그 수집
 loki.source.docker "logs" {
   host      = "unix:///var/run/docker.sock"
-  targets   = discovery.docker.containers.targets
+  targets   = discovery.relabel.docker_logs.output
   forward_to = [loki.process.labels.receiver]
 }
 
@@ -48,7 +59,6 @@ loki.source.docker "logs" {
 loki.process "labels" {
   stage.docker { } // Docker 표준 로그 포맷(JSON) 자동 처리
 
-  // 추가적인 라벨 설정 (필요시)
   stage.static_labels {
     values = {
       environment = "production",
