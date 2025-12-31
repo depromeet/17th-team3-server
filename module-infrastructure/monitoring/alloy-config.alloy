@@ -60,9 +60,9 @@ loki.write "grafana_cloud" {
   }
 }
 
-// 3. 트레이싱 수집
+// 3. 트레이싱 수집 (디버깅 로그 추가 ⭐)
 
-// OTLP 수신기 (애플리케이션에서 보낸 데이터 받기)
+// OTLP 수신기
 otelcol.receiver.otlp "default" {
   grpc {
     endpoint = "0.0.0.0:4317"
@@ -71,8 +71,23 @@ otelcol.receiver.otlp "default" {
     endpoint = "0.0.0.0:4318"
   }
   output {
-    traces  = [otelcol.exporter.otlp.grafana_cloud.input]
+    traces  = [otelcol.processor.batch.default.input]
   }
+}
+
+// 배치 처리
+otelcol.processor.batch "default" {
+  output {
+    traces  = [
+      otelcol.exporter.otlp.grafana_cloud.input,
+      otelcol.exporter.logging.debug.input, // 로그에 트레이스 정보 출력
+    ]
+  }
+}
+
+// 디버깅용 로그 출력
+otelcol.exporter.logging "debug" {
+  verbosity = "normal"
 }
 
 // Grafana Cloud Tempo로 전송
