@@ -12,6 +12,12 @@ services:
     command: run --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
     env_file:
       - .env
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
     networks:
       - depromeet_network # backend(WAS) 메트릭 수집용
       - depromeet_monitoring_network # Exporter들 메트릭 수집용
