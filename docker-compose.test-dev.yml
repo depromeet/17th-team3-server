@@ -3,9 +3,9 @@
 #    mkdir -p module-infrastructure/ngrinder/controller
 #    mkdir -p module-infrastructure/ngrinder/agent
 # 2) 컨트롤러/에이전트를 기동합니다.
-#    docker compose -f docker-compose.ngrinder.yml up -d
+#    docker compose -f docker-compose.test-dev.yml up -d
 # 3) 브라우저에서 http://<서버 IP>:16001 접속 후 웹 콘솔 사용
-# 4) 중지 시 docker compose -f docker-compose.ngrinder.yml down
+# 4) 중지 시 docker compose -f docker-compose.test-dev.yml down
 #
 # 포트 정보
 # - 16001: 컨트롤러 웹 콘솔 (HTTP)
