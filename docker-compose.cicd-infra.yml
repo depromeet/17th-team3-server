@@ -1,5 +1,32 @@
 services:
-  # Private Docker Registry
+  nginx-cicd:
+    container_name: nginx-cicd
+    image: nginx:1.29.0
+    ports:
+      - "900:80"
+    volumes:
+      - ./module-infrastructure/nginx/nginx-cicd.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./module-infrastructure/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+    environment:
+      - TZ=Asia/Seoul
+    networks:
+      - depromeet_cicd_network
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    depends_on:
+      - jenkins
+      - registry
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/stub_status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   registry:
     image: registry:2
     container_name: registry
@@ -13,7 +40,6 @@ services:
       REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
       REGISTRY_CATALOG_MAXENTRIES: 5000
-      # HTTP 설정 (업로드 안정성 향상)
       REGISTRY_HTTP_SECRET: "a-very-long-random-string-for-http-secret"
       REGISTRY_HTTP_TIMEOUT_READ: "300s"
       REGISTRY_HTTP_TIMEOUT_WRITE: "300s"
@@ -21,7 +47,6 @@ services:
       # 스토리지 설정 (업로드 청크 크기 최적화)
       REGISTRY_STORAGE_DELETE_ENABLED: "true"
       REGISTRY_STORAGE_CACHE_BLOBDESCRIPTOR: "inmemory"
-      # 로그 레벨
       REGISTRY_LOG_LEVEL: "info"
     volumes:
       - registry_data:/var/lib/registry
@@ -74,106 +99,14 @@ services:
       options:
         max-size: "10m"
         max-file: "10"
-    mem_limit: 3g        # Jenkins 컨테이너 메모리 제한
-    mem_reservation: 1g  # 예약 메모리
-    cpus: 2.0
-
-  nginx:
-    container_name: nginx-cicd
-    image: nginx:1.29.0
-    ports:
-      - "900:80"
-      - "4430:443"
-    volumes:
-      - ./module-infrastructure/nginx/nginx-cicd.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - ./module-infrastructure/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
-    environment:
-      - TZ=Asia/Seoul
-    networks:
-      - depromeet_cicd_network
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
-    depends_on:
-      - jenkins
-      - registry
-      - sonarqube
-
-  sonarqube-db:
-    image: postgres:15
-    container_name: sonarqube-db
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${SONARQUBE_DB_USER:-sonar}
-      POSTGRES_PASSWORD: ${SONARQUBE_DB_PASSWORD:-sonar}
-      POSTGRES_DB: ${SONARQUBE_DB_NAME:-sonar}
-      TZ: Asia/Seoul
-    volumes:
-      - sonarqube_db:/var/lib/postgresql/data
-    networks:
-      - depromeet_cicd_network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "7"
-    mem_limit: 768m
-    mem_reservation: 512m
-    cpus: 0.8
-
-  sonarqube:
-    image: sonarqube:10.6.0-community
-    container_name: sonarqube
-    restart: unless-stopped
-    depends_on:
-      - sonarqube-db
-    env_file:
-      - .env
-    environment:
-      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/${SONARQUBE_DB_NAME:-sonar}
-      SONAR_JDBC_USERNAME: ${SONARQUBE_DB_USER:-sonar}
-      SONAR_JDBC_PASSWORD: ${SONARQUBE_DB_PASSWORD:-sonar}
-      SONAR_WEB_JAVAADDITIONALOPTS: "-server"
-      SONAR_WEB_JAVAOPTS: "-Xmx256m"
-      SONAR_SEARCH_JAVAADDITIONALOPTS: "-XX:+UseG1GC -XX:ActiveProcessorCount=2"
-      SONAR_SEARCH_JAVAOPTS: "-Xmx512m -Xms512m"
-      SONAR_CE_JAVAOPTS: "-Xmx512m"
-      TZ: Asia/Seoul
-    ports:
-      - "9001:9000"
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_logs:/opt/sonarqube/logs
-      - sonarqube_extensions:/opt/sonarqube/extensions
-    networks:
-      - depromeet_cicd_network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "7"
-    mem_limit: 2g
+    mem_limit: 3g
     mem_reservation: 1g
-    cpus: 1.5
+    cpus: 2.0
 
 volumes:
   registry_data:
     driver: local
   jenkins_home:
-    driver: local
-  sonarqube_data:
-    driver: local
-  sonarqube_logs:
-    driver: local
-  sonarqube_extensions:
-    driver: local
-  sonarqube_db:
     driver: local
 
 networks:
