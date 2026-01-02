@@ -27,15 +27,6 @@ pipeline {
 
         DEPLOY_PATH = "/home/ubuntu/momuzzi-server"
 
-        // SonarQube 설정
-//         SONARQUBE_SERVER_NAME = "depromeet-sonarqube"
-//         SONARQUBE_TOKEN_CREDENTIALS_ID = "sonarqube-token"
-//         SONARQUBE_PROJECT_KEY = "depromeet-team3-server"
-//         SONARQUBE_PROJECT_NAME = "Depromeet Team 3 Server"
-//         SONARQUBE_SCANNER_IMAGE = "sonarsource/sonar-scanner-cli:5.0.1"
-//         SONARQUBE_BINARY_PATH_JAVA = "module-api/build/classes/java/main"
-//         SONARQUBE_BINARY_PATH_KOTLIN = "module-api/build/classes/kotlin/main"
-
         // Main 브랜치 감지 로직 통합
         IS_MAIN_BRANCH = "false"
 
@@ -141,7 +132,7 @@ pipeline {
                     sh 'echo "All git branches: $(git branch -a)"'
 
                     sh '''
-                    ./gradlew :module-api:clean :module-api:bootJar \
+                    ./gradlew :ssolv-api-core:clean :ssolv-api-core:bootJar \
                     --no-daemon \
                     --stacktrace \
                     -x test \
@@ -165,7 +156,7 @@ pipeline {
         //                     variable: 'SONARQUBE_TOKEN'
         //                 )]) {
         //                     sh """
-        //                         mkdir -p module-api/build
+        //                         mkdir -p ssolv-api-core/build
         //                         docker run --rm \
         //                           -e SONAR_HOST_URL=$SONAR_HOST_URL \
         //                           -e SONAR_LOGIN=$SONARQUBE_TOKEN \
@@ -174,8 +165,8 @@ pipeline {
         //                           ${SONARQUBE_SCANNER_IMAGE} sonar-scanner \
         //                             -Dsonar.projectKey=${SONARQUBE_PROJECT_KEY} \
         //                             -Dsonar.projectName="${SONARQUBE_PROJECT_NAME}" \
-        //                             -Dsonar.sources=module-api/src/main/java,module-api/src/main/kotlin \
-        //                             -Dsonar.tests=module-api/src/test/java,module-api/src/test/kotlin \
+        //                             -Dsonar.sources=ssolv-api-core/src/main/java,ssolv-api-core/src/main/kotlin \
+        //                             -Dsonar.tests=ssolv-api-core/src/test/java,ssolv-api-core/src/test/kotlin \
         //                             -Dsonar.java.binaries=${SONARQUBE_BINARY_PATH_JAVA} \
         //                             -Dsonar.kotlin.binaries=${SONARQUBE_BINARY_PATH_KOTLIN} \
         //                             -Dsonar.sourceEncoding=UTF-8 \
@@ -218,7 +209,7 @@ pipeline {
         //                     variable: 'SONARQUBE_TOKEN'
         //                 )]) {
         //                     sh """
-        //                         mkdir -p module-api/build
+        //                         mkdir -p ssolv-api-core/build
         //                         docker run --rm \
         //                           -e SONAR_HOST_URL=$SONAR_HOST_URL \
         //                           -e SONAR_LOGIN=$SONARQUBE_TOKEN \
@@ -227,8 +218,8 @@ pipeline {
         //                           ${SONARQUBE_SCANNER_IMAGE} sonar-scanner \
         //                             -Dsonar.projectKey=${SONARQUBE_PROJECT_KEY} \
         //                             -Dsonar.projectName="${SONARQUBE_PROJECT_NAME}" \
-        //                             -Dsonar.sources=module-api/src/main/java,module-api/src/main/kotlin \
-        //                             -Dsonar.tests=module-api/src/test/java,module-api/src/test/kotlin \
+        //                             -Dsonar.sources=ssolv-api-core/src/main/java,ssolv-api-core/src/main/kotlin \
+        //                             -Dsonar.tests=ssolv-api-core/src/test/java,ssolv-api-core/src/test/kotlin \
         //                             -Dsonar.java.binaries=${SONARQUBE_BINARY_PATH_JAVA} \
         //                             -Dsonar.kotlin.binaries=${SONARQUBE_BINARY_PATH_KOTLIN} \
         //                             -Dsonar.sourceEncoding=UTF-8
@@ -263,7 +254,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        docker build -f module-api/Dockerfile -t test-build .
+                        docker build -f ssolv-api-core/Dockerfile -t test-build .
                         docker rmi test-build || true
                     '''
                 }
@@ -292,7 +283,7 @@ pipeline {
 
                         // Docker 이미지 빌드 (캐시 사용 안함)
                         sh """
-                            docker build --no-cache -f module-api/Dockerfile -t ${fullImageName}:${imageTag} .
+                            docker build --no-cache -f ssolv-api-core/Dockerfile -t ${fullImageName}:${imageTag} .
                             docker tag ${fullImageName}:${imageTag} ${fullImageName}:latest
                         """
 

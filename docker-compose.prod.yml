@@ -1,10 +1,43 @@
 services:
-  backend:
-    container_name: backend
-    image: ${DOCKER_IMAGE:-backend:latest}
+  backend-core:
+    container_name: backend-core
+    image: ${DOCKER_IMAGE_CORE:-backend-core:latest}
     build:
       context: .
-      dockerfile: module-api/Dockerfile
+      dockerfile: ssolv-api-core/Dockerfile
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - MYSQL_USER=${PROD_DB_USERNAME}
+      - MYSQL_PASSWORD=${PROD_DB_PASSWORD}
+      - MYSQL_URL=jdbc:mysql://${PROD_DB_ENDPOINT}:3306/${PROD_DB_NAME}
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0
+    networks:
+      - depromeet_network
+    external_links:
+      - signoz-otel-collector:signoz-otel-collector
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "7"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  backend-place:
+    container_name: backend-place
+    image: ${DOCKER_IMAGE_PLACE:-backend-place:latest}
+    build:
+      context: .
+      dockerfile: ssolv-api-place/Dockerfile
     env_file:
       - .env
     environment:
@@ -38,7 +71,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./module-infrastructure/nginx/nginx-app.conf:/etc/nginx/nginx.conf:ro
+      - ./ssolv-infrastructure/nginx/nginx-app.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
       - TZ=Asia/Seoul
@@ -51,7 +84,9 @@ services:
         max-size: "10m"
         max-file: "5"
     depends_on:
-      backend:
+      backend-core:
+        condition: service_healthy
+      backend-place:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost/stub_status" ]

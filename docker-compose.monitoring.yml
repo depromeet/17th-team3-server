@@ -6,7 +6,7 @@ services:
     user: root
     restart: unless-stopped
     volumes:
-      - ./module-infrastructure/monitoring/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - ./ssolv-infrastructure/monitoring/alloy-config.alloy:/etc/alloy/config.alloy:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
     command: run --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
