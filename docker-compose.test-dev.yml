@@ -1,7 +1,7 @@
 # 사용법 요약
 # 1) 최초 실행 전 볼륨 디렉터리를 생성합니다.
-#    mkdir -p module-infrastructure/ngrinder/controller
-#    mkdir -p module-infrastructure/ngrinder/agent
+#    mkdir -p ssolv-infrastructure/ngrinder/controller
+#    mkdir -p ssolv-infrastructure/ngrinder/agent
 # 2) 컨트롤러/에이전트를 기동합니다.
 #    docker compose -f docker-compose.test-dev.yml up -d
 # 3) 브라우저에서 http://<서버 IP>:16001 접속 후 웹 콘솔 사용
@@ -21,13 +21,13 @@ services:
     container_name: ngrinder-controller
     restart: unless-stopped
     ports:
-      - "8000:80"      # nGrinder 웹 콘솔 (HTTP)
-      - "16010:16001"   # 에이전트 제어 포트
+      - "8000:80" # nGrinder 웹 콘솔 (HTTP)
+      - "16010:16001" # 에이전트 제어 포트
     environment:
       - TZ=Asia/Seoul
       - NGRINDER_HOME=/opt/ngrinder-controller
     volumes:
-      - ./module-infrastructure/ngrinder/controller:/opt/ngrinder-controller
+      - ./ssolv-infrastructure/ngrinder/controller:/opt/ngrinder-controller
     networks:
       - ngrinder_network
 
@@ -39,9 +39,9 @@ services:
       - ngrinder-controller
     environment:
       - TZ=Asia/Seoul
-    command: ["ngrinder-controller:80"]
+    command: [ "ngrinder-controller:80" ]
     volumes:
-      - ./module-infrastructure/ngrinder/agent:/opt/ngrinder-agent
+      - ./ssolv-infrastructure/ngrinder/agent:/opt/ngrinder-agent
     networks:
       - ngrinder_network
 
@@ -53,9 +53,9 @@ services:
       - ngrinder-controller
     environment:
       - TZ=Asia/Seoul
-    command: ["ngrinder-controller:80"]
+    command: [ "ngrinder-controller:80" ]
     volumes:
-      - ./module-infrastructure/ngrinder/agent-2:/opt/ngrinder-agent
+      - ./ssolv-infrastructure/ngrinder/agent-2:/opt/ngrinder-agent
     networks:
       - ngrinder_network
 

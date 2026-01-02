@@ -1,8 +1,10 @@
 rootProject.name = "team3"
 
 include(
-    "module-api",
-    "module-domain",
-    "module-global-utils",
-    "module-infrastructure",
+    "ssolv-api-common",
+    "ssolv-api-core",
+    "ssolv-api-place",
+    "ssolv-domain",
+    "ssolv-global-utils",
+    "ssolv-infrastructure",
 )

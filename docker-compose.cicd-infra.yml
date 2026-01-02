@@ -5,9 +5,9 @@ services:
     ports:
       - "900:80"
     volumes:
-      - ./module-infrastructure/nginx/nginx-cicd.conf:/etc/nginx/nginx.conf:ro
+      - ./ssolv-infrastructure/nginx/nginx-cicd.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
-      - ./module-infrastructure/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+      - ./ssolv-infrastructure/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
     environment:
       - TZ=Asia/Seoul
     networks:
@@ -19,7 +19,6 @@ services:
         max-size: "10m"
         max-file: "5"
     depends_on:
-      - jenkins
       - registry
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost/stub_status" ]
@@ -50,7 +49,7 @@ services:
       REGISTRY_LOG_LEVEL: "info"
     volumes:
       - registry_data:/var/lib/registry
-      - ./module-infrastructure/nginx/.htpasswd:/auth/htpasswd:ro
+      - ./ssolv-infrastructure/nginx/.htpasswd:/auth/htpasswd:ro
     networks:
       - depromeet_cicd_network
     logging:
@@ -76,37 +75,8 @@ services:
     networks:
       - depromeet_cicd_network
 
-  jenkins:
-    image: jenkins/jenkins:lts
-    container_name: jenkins
-    restart: unless-stopped
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/bin/docker:/usr/bin/docker:ro
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-      - /home/ubuntu/momuzzi-server/.env:/home/ubuntu/momuzzi-server/.env:ro
-    environment:
-      - JENKINS_OPTS=--httpPort=8080
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
-      - TZ=Asia/Seoul
-    user: root
-    networks:
-      - depromeet_cicd_network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "10"
-    mem_limit: 3g
-    mem_reservation: 1g
-    cpus: 2.0
-
 volumes:
   registry_data:
-    driver: local
-  jenkins_home:
     driver: local
 
 networks:
