@@ -11,7 +11,7 @@ services:
     environment:
       - TZ=Asia/Seoul
     networks:
-      - depromeet_cicd_network
+      - ssolv_cicd_network
     restart: always
     logging:
       driver: "json-file"
@@ -51,7 +51,7 @@ services:
       - registry_data:/var/lib/registry
       - ./ssolv-infrastructure/nginx/.htpasswd:/auth/htpasswd:ro
     networks:
-      - depromeet_cicd_network
+      - ssolv_cicd_network
     logging:
       driver: "json-file"
       options:
@@ -73,12 +73,12 @@ services:
     depends_on:
       - registry
     networks:
-      - depromeet_cicd_network
+      - ssolv_cicd_network
 
 volumes:
   registry_data:
     driver: local
 
 networks:
-  depromeet_cicd_network:
+  ssolv_cicd_network:
     driver: bridge

@@ -19,8 +19,8 @@ services:
         reservations:
           memory: 128M
     networks:
-      - depromeet_network # backend(WAS) 메트릭 수집용
-      - depromeet_monitoring_network # Exporter들 메트릭 수집용
+      - ssolv_prod_network # backend(WAS) 메트릭 수집용
+      - ssolv_monitoring_network # Exporter들 메트릭 수집용
     ports:
       - "4317:4317" # OTLP gRPC 수신용
       - "4318:4318" # OTLP HTTP 수신용
@@ -40,7 +40,7 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     networks:
-      - depromeet_monitoring_network
+      - ssolv_monitoring_network
 
   # Nginx Exporter - Nginx 메트릭
   nginx-exporter:
@@ -50,11 +50,11 @@ services:
     command:
       - '--nginx.scrape-uri=http://nginx-app:80/stub_status'
     networks:
-      - depromeet_network # nginx-app 접속용
-      - depromeet_monitoring_network # alloy 접속용
+      - ssolv_prod_network # nginx-app 접속용
+      - ssolv_monitoring_network # alloy 접속용
 
 networks:
-  depromeet_network:
+  ssolv_prod_network:
     external: true
-  depromeet_monitoring_network:
+  ssolv_monitoring_network:
     driver: bridge
