@@ -1,3 +1,7 @@
+plugins {
+    id("java-test-fixtures")
+}
+
 apply(plugin = "java-library")
 
 dependencies {
@@ -28,6 +32,12 @@ dependencies {
 
     // Jackson Kotlin 모듈
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    // Test Fixtures dependencies
+    testFixturesImplementation("org.springframework.boot:spring-boot-starter-test")
+    testFixturesImplementation("org.springframework.security:spring-security-test")
+    testFixturesImplementation("io.mockk:mockk:1.13.9")
+    testFixturesImplementation("com.ninja-squad:springmockk:4.0.2")
 }
 
 tasks {

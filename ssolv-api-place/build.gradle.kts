@@ -1,5 +1,6 @@
 dependencies {
     implementation(project(":ssolv-api-common"))
+    testImplementation(testFixtures(project(":ssolv-api-common")))
 
     implementation("org.springframework:spring-jdbc:6.2.3")
 
