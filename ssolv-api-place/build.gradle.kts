@@ -41,7 +41,7 @@ tasks {
 
 jib {
     from {
-        image = "eclipse-temurin:21-jre-alpine"
+        image = "eclipse-temurin:17-jre-alpine"
     }
     to {
         image = "registry.ssolv.site/place-server"
@@ -50,8 +50,6 @@ jib {
     container {
         jvmFlags = listOf(
             "-Duser.timezone=Asia/Seoul",
-            "-Xms512m",
-            "-Xmx1024m",
             "-XX:MaxRAMPercentage=75.0"
         )
         ports = listOf("8080")
