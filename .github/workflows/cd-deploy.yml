@@ -1,0 +1,66 @@
+name: CD Deploy
+
+on:
+  push:
+    branches: [ main ] # dev -> main 머지 시 실행
+  workflow_dispatch:   # 수동 실행 허용
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: deploy-to-ssolv-prod-server
+      url: https://api.ssolv.site
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build and Push with Jib
+        run: |
+          ./gradlew :ssolv-api-core:jib :ssolv-api-place:jib \
+            -Djib.to.auth.username=${{ secrets.REGISTRY_USERNAME }} \
+            -Djib.to.auth.password=${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: EC2 Deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 프로젝트 디렉토리로 이동 
+            cd ~/17th-team3-Server
+            
+            # 최신 코드(docker-compose.prod.yml 등) 가져오기
+            git fetch origin
+            git reset --hard origin/main
+            
+            # 최신 이미지 가져오기
+            docker compose -f docker-compose.prod.yml pull
+            
+            # 서비스 재시작 (변경된 컨테이너만)
+            docker compose -f docker-compose.prod.yml up -d
+            
+            # 배포 검증 (Health Check)
+            echo "Waiting for services to be healthy..."
+            sleep 10
+            
+            if docker compose -f docker-compose.prod.yml ps | grep "unhealthy"; then
+              echo "Deployment Failed! Some services are unhealthy."
+              docker compose -f docker-compose.prod.yml ps
+              exit 1
+            fi
+            
+            echo "Deployment Successful!"
+            
+            # 불필요한 이미지 정리
+            docker image prune -f
