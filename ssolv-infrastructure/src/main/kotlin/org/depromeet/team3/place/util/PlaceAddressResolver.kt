@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import org.depromeet.team3.place.client.GooglePlacesClient
 import org.depromeet.team3.place.model.PlaceDetailsResponse
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -15,6 +16,7 @@ import kotlin.math.sqrt
  * 주소 및 역 정보 처리 담당
  */
 @Component
+@ConditionalOnProperty(prefix = "api.google.places", name = ["api-key"])
 class PlaceAddressResolver(
     private val googlePlacesClient: GooglePlacesClient
 ) {

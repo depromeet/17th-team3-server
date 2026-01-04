@@ -9,7 +9,7 @@ import org.depromeet.team3.meetingplace.MeetingPlaceRepository
 import org.depromeet.team3.meetingplace.exception.MeetingPlaceException
 import org.depromeet.team3.placelike.PlaceLike
 import org.depromeet.team3.placelike.PlaceLikeRepository
-import org.depromeet.team3.placelike.application.SearchPlaceLikeService
+import org.depromeet.team3.placelike.application.PlaceLikeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -19,7 +19,7 @@ import org.mockito.kotlin.*
 import org.springframework.dao.DataIntegrityViolationException
 
 @ExtendWith(MockitoExtension::class)
-class SearchPlaceLikeServiceTest {
+class PlaceLikeServiceTest {
 
     @Mock
     private lateinit var meetingPlaceRepository: MeetingPlaceRepository
@@ -27,11 +27,11 @@ class SearchPlaceLikeServiceTest {
     @Mock
     private lateinit var placeLikeRepository: PlaceLikeRepository
 
-    private lateinit var searchPlaceLikeService: SearchPlaceLikeService
+    private lateinit var placeLikeService: PlaceLikeService
 
     @BeforeEach
     fun setUp() {
-        searchPlaceLikeService = SearchPlaceLikeService(
+        placeLikeService = PlaceLikeService(
             meetingPlaceRepository = meetingPlaceRepository,
             placeLikeRepository = placeLikeRepository
         )
@@ -65,7 +65,7 @@ class SearchPlaceLikeServiceTest {
             .thenReturn(1L)
 
         // when
-        val result = searchPlaceLikeService.toggle(meetingId, userId, placeId)
+        val result = placeLikeService.toggle(meetingId, userId, placeId)
 
         // then
         assertThat(result.isLiked).isTrue()
@@ -101,7 +101,7 @@ class SearchPlaceLikeServiceTest {
             .thenReturn(0L)
 
         // when
-        val result = searchPlaceLikeService.toggle(meetingId, userId, placeId)
+        val result = placeLikeService.toggle(meetingId, userId, placeId)
 
         // then
         assertThat(result.isLiked).isFalse()
@@ -128,7 +128,7 @@ class SearchPlaceLikeServiceTest {
         // when & then
         assertThatThrownBy {
             runBlocking {
-                searchPlaceLikeService.toggle(meetingId, userId, placeId)
+                placeLikeService.toggle(meetingId, userId, placeId)
             }
         }.isInstanceOf(MeetingPlaceException::class.java)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MEETING_PLACE_NOT_FOUND)
@@ -165,7 +165,7 @@ class SearchPlaceLikeServiceTest {
             .thenReturn(5L) // 다른 사용자들이 이미 4개 좋아요
 
         // when
-        val result = searchPlaceLikeService.toggle(meetingId, userId, placeId)
+        val result = placeLikeService.toggle(meetingId, userId, placeId)
 
         // then
         assertThat(result.isLiked).isTrue()
@@ -200,7 +200,7 @@ class SearchPlaceLikeServiceTest {
             .thenReturn(1L)
 
         // when
-        searchPlaceLikeService.toggle(meetingId, userId, placeId)
+        placeLikeService.toggle(meetingId, userId, placeId)
 
         // then
         // save 메서드가 호출되었는지 확인
@@ -235,7 +235,7 @@ class SearchPlaceLikeServiceTest {
             .thenReturn(0L)
 
         // when
-        searchPlaceLikeService.toggle(meetingId, userId, placeId)
+        placeLikeService.toggle(meetingId, userId, placeId)
 
         // then
         // save 메서드가 호출되었는지 확인

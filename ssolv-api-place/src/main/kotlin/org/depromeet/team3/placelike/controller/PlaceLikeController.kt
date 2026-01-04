@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.depromeet.team3.common.ContextConstants
 import org.depromeet.team3.common.annotation.UserId
 import org.depromeet.team3.common.response.DpmApiResponse
-import org.depromeet.team3.placelike.application.SearchPlaceLikeService
+import org.depromeet.team3.placelike.application.PlaceLikeService
 import org.depromeet.team3.placelike.dto.PlaceLikeResponse
 import org.springframework.web.bind.annotation.*
 
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("${ContextConstants.API_VERSION_V1}/meetings/{meetingId}/places/{placeId}/like")
 class PlaceLikeController(
-    private val searchPlaceLikeService: SearchPlaceLikeService
+    private val placeLikeService: PlaceLikeService
 ) {
 
     @Operation(
@@ -36,7 +36,7 @@ class PlaceLikeController(
         @PathVariable placeId: Long,
         @UserId userId: Long
     ): DpmApiResponse<PlaceLikeResponse> {
-        val result = searchPlaceLikeService.toggle(meetingId, userId, placeId)
+        val result = placeLikeService.toggle(meetingId, userId, placeId)
         
         val response = PlaceLikeResponse(
             isLiked = result.isLiked,
