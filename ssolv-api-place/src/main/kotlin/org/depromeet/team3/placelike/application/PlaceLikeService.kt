@@ -10,31 +10,33 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class SearchPlaceLikeService(
+class PlaceLikeService(
     private val meetingPlaceRepository: MeetingPlaceRepository,
     private val placeLikeRepository: PlaceLikeRepository
 ) {
 
     @Transactional
     suspend fun toggle(meetingId: Long, userId: Long, placeId: Long): PlaceLikeResult {
-        // 1. MeetingPlace가 존재하는지 확인
-        val meetingPlace = meetingPlaceRepository.findByMeetingIdAndPlaceId(meetingId, placeId)
-            ?: throw MeetingPlaceException(
-                errorCode = ErrorCode.MEETING_PLACE_NOT_FOUND,
-                detail = mapOf(
-                    "meetingId" to meetingId,
-                    "placeId" to placeId
-                )
-            )
+        val meetingPlaceId = getMeetingPlaceId(meetingId, placeId)
+        val isLiked = toggleLikeStatus(meetingPlaceId, userId)
+        val likeCount = placeLikeRepository.countByMeetingPlaceId(meetingPlaceId).toInt()
 
-        val meetingPlaceId = meetingPlace.id
+        return PlaceLikeResult(
+            isLiked = isLiked,
+            likeCount = likeCount
+        )
+    }
+
+    private suspend fun getMeetingPlaceId(meetingId: Long, placeId: Long): Long {
+        return meetingPlaceRepository.findIdByMeetingIdAndPlaceId(meetingId, placeId)
             ?: throw MeetingPlaceException(
                 errorCode = ErrorCode.MEETING_PLACE_NOT_FOUND,
                 detail = mapOf("meetingId" to meetingId, "placeId" to placeId)
             )
+    }
 
-        // 2. 좋아요 처리
-        val isLiked = try {
+    private suspend fun toggleLikeStatus(meetingPlaceId: Long, userId: Long): Boolean {
+        return try {
             placeLikeRepository.save(
                 PlaceLike(
                     meetingPlaceId = meetingPlaceId,
@@ -43,17 +45,10 @@ class SearchPlaceLikeService(
             )
             true
         } catch (e: DataIntegrityViolationException) {
+            // 이미 좋아요가 존재하면 삭제 (Toggle)
             placeLikeRepository.deleteByMeetingPlaceIdAndUserId(meetingPlaceId, userId)
             false
         }
-
-        // 3. 현재 좋아요 수 조회
-        val likeCount = placeLikeRepository.countByMeetingPlaceId(meetingPlaceId).toInt()
-
-        return PlaceLikeResult(
-            isLiked = isLiked,
-            likeCount = likeCount
-        )
     }
 
     data class PlaceLikeResult(

@@ -1,13 +1,10 @@
 package org.depromeet.team3.meetingplace
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+
 import org.depromeet.team3.common.exception.ErrorCode
 import org.depromeet.team3.mapper.MeetingPlaceMapper
 import org.depromeet.team3.meeting.MeetingJpaRepository
 import org.depromeet.team3.meeting.exception.MeetingException
-import org.depromeet.team3.meetingplace.MeetingPlace
-import org.depromeet.team3.meetingplace.MeetingPlaceRepository
 import org.depromeet.team3.place.PlaceJpaRepository
 import org.depromeet.team3.place.exception.PlaceException
 import org.springframework.stereotype.Component
@@ -84,6 +81,11 @@ class MeetingPlaceQuery(
     override suspend fun findByMeetingIdAndPlaceId(meetingId: Long, placeId: Long): MeetingPlace? {
         return meetingPlaceJpaRepository.findByMeetingIdAndPlaceId(meetingId, placeId)
             ?.let { meetingPlaceMapper.toDomain(it) }
+    }
+
+    @Transactional(readOnly = true)
+    override suspend fun findIdByMeetingIdAndPlaceId(meetingId: Long, placeId: Long): Long? {
+        return meetingPlaceJpaRepository.findIdByMeetingIdAndPlaceId(meetingId, placeId)
     }
 
     @Transactional
