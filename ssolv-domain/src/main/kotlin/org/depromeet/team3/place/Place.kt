@@ -1,7 +1,6 @@
 package org.depromeet.team3.place
 
 import org.depromeet.team3.common.BaseTimeDomain
-import org.depromeet.team3.menu.Menu
 import java.time.LocalDateTime
 
 data class Place(
@@ -20,7 +19,6 @@ data class Place(
     val priceRangeEnd: String? = null,
     val addressDescriptor: String? = null,
     val isDeleted: Boolean = false,
-    val menus: MutableList<Menu> = mutableListOf(),
     override val createdAt: LocalDateTime,
     override val updatedAt: LocalDateTime? = null,
 ) : BaseTimeDomain(createdAt, updatedAt)

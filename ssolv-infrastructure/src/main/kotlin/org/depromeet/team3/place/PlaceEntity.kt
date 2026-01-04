@@ -2,7 +2,6 @@ package org.depromeet.team3.place
 
 import jakarta.persistence.*
 import org.depromeet.team3.common.BaseTimeEntity
-import org.depromeet.team3.menu.MenuEntity
 
 @Entity
 @Table(
@@ -65,8 +64,5 @@ class PlaceEntity(
     val photos: String? = null,
     
     @Column(name = "is_deleted", nullable = false)
-    val isDeleted: Boolean = false,
-    
-    @OneToMany(mappedBy = "place", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    val menus: MutableList<MenuEntity> = mutableListOf()
+    val isDeleted: Boolean = false
 ) : BaseTimeEntity()
