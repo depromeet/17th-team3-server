@@ -14,6 +14,7 @@ import org.depromeet.team3.place.model.NearbySearchResponse
 import org.depromeet.team3.place.model.PlaceDetailsResponse
 import org.depromeet.team3.place.model.PlacesTextSearchRequest
 import org.depromeet.team3.place.model.PlacesTextSearchResponse
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClient
@@ -21,6 +22,7 @@ import org.springframework.web.client.RestClientException
 import kotlin.random.Random
 
 @Component
+@ConditionalOnProperty(prefix = "api.google.places", name = ["api-key"])
 class GooglePlacesClient(
     private val googlePlacesRestClient: RestClient,
     private val googlePlacesApiProperties: GooglePlacesApiProperties,

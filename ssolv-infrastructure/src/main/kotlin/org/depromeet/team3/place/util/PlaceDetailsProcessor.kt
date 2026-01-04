@@ -8,12 +8,14 @@ import org.depromeet.team3.place.exception.PlaceSearchException
 import org.depromeet.team3.place.model.PlaceDetailsResponse
 import org.depromeet.team3.place.model.PlacesTextSearchResponse
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
 /**
  * 장소 상세 정보 병렬 조회 및 DTO 변환 담당
  */
 @Component
+@ConditionalOnProperty(prefix = "api.google.places", name = ["api-key"])
 class PlaceDetailsProcessor(
     private val placeQuery: PlaceQuery,
     private val placeAddressResolver: PlaceAddressResolver,
