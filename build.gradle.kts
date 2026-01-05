@@ -6,7 +6,7 @@ plugins {
     kotlin("plugin.spring") version "1.9.25" apply false
     kotlin("plugin.jpa") version "1.9.25" apply false
     kotlin("kapt") version "1.9.25" apply false
-    id("org.sonarqube") version "4.4.1.3373"
+    id("org.sonarqube") version "5.1.0.4882"
 }
 
 // 모든 프로젝트 공통 설정
