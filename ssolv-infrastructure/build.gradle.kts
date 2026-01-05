@@ -5,7 +5,6 @@ plugins {
     kotlin("plugin.spring") version "1.9.25"
     kotlin("plugin.jpa") version "1.9.25"
     kotlin("kapt") version "1.9.25"
-    groovy
 }
 
 // kapt 설정
@@ -15,13 +14,6 @@ kapt {
     showProcessorStats = false
     javacOptions {
         option("-Xmaxerrs", 500)
-    }
-}
-
-// 테스트에서 kapt 비활성화 (ngrinder 라이브러리 충돌 방지)
-tasks.withType<org.jetbrains.kotlin.gradle.internal.KaptGenerateStubsTask>().configureEach {
-    if (name.contains("Test")) {
-        enabled = false
     }
 }
 
@@ -53,18 +45,6 @@ dependencies {
     // Kotlin Logging
     implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
 
-    // nGrinder
-    testImplementation(files("libs/ngrinder-runtime-3.5.9.jar"))
-    testImplementation(files("libs/ngrinder-groovy-3.5.9.jar"))
-    testImplementation(files("libs/grinder-core-3.9.1.jar"))
-    testImplementation(files("libs/grinder-3.9.1.jar"))
-    testImplementation(files("libs/grinder-3.9.1-patch.jar"))
-    testImplementation(files("libs/grinder-http-3.9.1.jar"))
-    testImplementation(files("libs/grinder-httpclient-3.9.1.jar"))
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("commons-httpclient:commons-httpclient:3.1")
-    testImplementation("org.codehaus.groovy:groovy:3.0.22")
-    
     // Test Dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
@@ -80,22 +60,5 @@ tasks {
     }
     bootJar {
         enabled = false
-    }
-}
-
-// IntelliJ에서 nGrinder 스크립트 디렉터리를 테스트 소스로 인식하도록 설정
-if (project.plugins.findPlugin("idea") == null) {
-    apply(plugin = "idea")
-}
-
-configure<org.gradle.plugins.ide.idea.model.IdeaModel> {
-    module {
-        testSources.from(file("ngrinder/scripts"))
-    }
-}
-
-sourceSets {
-    test {
-        groovy.srcDir("ngrinder/scripts")
     }
 }
