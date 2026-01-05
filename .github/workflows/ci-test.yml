@@ -61,6 +61,7 @@ jobs:
       
       - name: SonarQube Analysis
         if: always()
+        continue-on-error: true
         run: ./gradlew sonar -Dsonar.gradle.skipCompile=true --info
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

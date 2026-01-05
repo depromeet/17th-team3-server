@@ -120,7 +120,6 @@ sonar {
         property("sonar.organization", "depromeet-1")
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.gradle.skipCompile", "true")
-        property("sonar.verbose", "true") // 상세 로그 활성화
         
         // 코드 커버리지 리포트 경로 (모든 서브모듈의 Jacoco 리포트)
         property("sonar.coverage.jacoco.xmlReportPaths", 
