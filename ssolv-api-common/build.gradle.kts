@@ -33,6 +33,12 @@ dependencies {
     // Jackson Kotlin 모듈
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
 
+    // Test dependencies
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.assertj:assertj-core:3.25.3")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+
     // Test Fixtures dependencies
     testFixturesImplementation("org.springframework.boot:spring-boot-starter-test")
     testFixturesImplementation("org.springframework.security:spring-security-test")

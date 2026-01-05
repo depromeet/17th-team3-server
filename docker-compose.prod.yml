@@ -1,10 +1,7 @@
 services:
-  backend-core:
-    container_name: backend-core
-    image: ${DOCKER_IMAGE_CORE:-backend-core:latest}
-    build:
-      context: .
-      dockerfile: ssolv-api-core/Dockerfile
+  core-server:
+    container_name: core-server
+    image: ${DOCKER_IMAGE_CORE:-registry.ssolv.site/core-server:latest}
     env_file:
       - .env
     environment:
@@ -14,7 +11,7 @@ services:
       - MYSQL_URL=jdbc:mysql://${PROD_DB_ENDPOINT}:3306/${PROD_DB_NAME}
       - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0
     networks:
-      - depromeet_network
+      - ssolv_prod_network
     external_links:
       - signoz-otel-collector:signoz-otel-collector
     restart: unless-stopped
@@ -32,12 +29,9 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
 
-  backend-place:
-    container_name: backend-place
-    image: ${DOCKER_IMAGE_PLACE:-backend-place:latest}
-    build:
-      context: .
-      dockerfile: ssolv-api-place/Dockerfile
+  place-server:
+    container_name: place-server
+    image: ${DOCKER_IMAGE_PLACE:-registry.ssolv.site/place-server:latest}
     env_file:
       - .env
     environment:
@@ -45,11 +39,8 @@ services:
       - MYSQL_USER=${PROD_DB_USERNAME}
       - MYSQL_PASSWORD=${PROD_DB_PASSWORD}
       - MYSQL_URL=jdbc:mysql://${PROD_DB_ENDPOINT}:3306/${PROD_DB_NAME}
-      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0
     networks:
-      - depromeet_network
-    external_links:
-      - signoz-otel-collector:signoz-otel-collector
+      - ssolv_prod_network
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -76,7 +67,7 @@ services:
     environment:
       - TZ=Asia/Seoul
     networks:
-      - depromeet_network
+      - ssolv_prod_network
     restart: always
     logging:
       driver: "json-file"
@@ -84,9 +75,9 @@ services:
         max-size: "10m"
         max-file: "5"
     depends_on:
-      backend-core:
+      core-server:
         condition: service_healthy
-      backend-place:
+      place-server:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost/stub_status" ]
@@ -97,5 +88,5 @@ services:
     mem_reservation: 64m
 
 networks:
-  depromeet_network:
+  ssolv_prod_network:
     external: true

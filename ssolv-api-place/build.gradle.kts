@@ -1,3 +1,7 @@
+plugins {
+    id("com.google.cloud.tools.jib")
+}
+
 dependencies {
     implementation(project(":ssolv-api-common"))
     testImplementation(testFixtures(project(":ssolv-api-common")))
@@ -32,5 +36,23 @@ tasks {
     }
     bootJar {
         enabled = true
+    }
+}
+
+jib {
+    from {
+        image = "eclipse-temurin:17-jre-alpine"
+    }
+    to {
+        image = "registry.ssolv.site/place-server"
+        tags = setOf("latest", "${project.version}")
+    }
+    container {
+        jvmFlags = listOf(
+            "-Duser.timezone=Asia/Seoul",
+            "-XX:MaxRAMPercentage=75.0"
+        )
+        ports = listOf("8080")
+        creationTime = "USE_CURRENT_TIMESTAMP"
     }
 }

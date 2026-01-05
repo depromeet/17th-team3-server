@@ -45,20 +45,14 @@ class PlaceLikeServiceTest {
         val placeId = 200L
         val meetingPlaceId = 10L
 
-        val meetingPlace = MeetingPlace(
-            id = meetingPlaceId,
-            meetingId = meetingId,
-            placeId = placeId
-        )
-
         val savedPlaceLike = PlaceLike(
             id = 1L,
             meetingPlaceId = meetingPlaceId,
             userId = userId
         )
 
-        whenever(meetingPlaceRepository.findByMeetingIdAndPlaceId(meetingId, placeId))
-            .thenReturn(meetingPlace)
+        whenever(meetingPlaceRepository.findIdByMeetingIdAndPlaceId(meetingId, placeId))
+            .thenReturn(meetingPlaceId)
         whenever(placeLikeRepository.save(any()))
             .thenReturn(savedPlaceLike)
         whenever(placeLikeRepository.countByMeetingPlaceId(meetingPlaceId))
@@ -79,6 +73,7 @@ class PlaceLikeServiceTest {
         verify(placeLikeRepository, never()).deleteByMeetingPlaceIdAndUserId(any(), any())
     }
 
+
     @Test
     fun `좋아요 토글 - 기존 좋아요 취소`(): Unit = runBlocking {
         // given
@@ -87,14 +82,8 @@ class PlaceLikeServiceTest {
         val placeId = 200L
         val meetingPlaceId = 10L
 
-        val meetingPlace = MeetingPlace(
-            id = meetingPlaceId,
-            meetingId = meetingId,
-            placeId = placeId
-        )
-
-        whenever(meetingPlaceRepository.findByMeetingIdAndPlaceId(meetingId, placeId))
-            .thenReturn(meetingPlace)
+        whenever(meetingPlaceRepository.findIdByMeetingIdAndPlaceId(meetingId, placeId))
+            .thenReturn(meetingPlaceId)
         whenever(placeLikeRepository.save(any()))
             .thenThrow(DataIntegrityViolationException("Duplicate entry"))
         whenever(placeLikeRepository.countByMeetingPlaceId(meetingPlaceId))
@@ -122,7 +111,7 @@ class PlaceLikeServiceTest {
         val userId = 100L
         val placeId = 200L
 
-        whenever(meetingPlaceRepository.findByMeetingIdAndPlaceId(meetingId, placeId))
+        whenever(meetingPlaceRepository.findIdByMeetingIdAndPlaceId(meetingId, placeId))
             .thenReturn(null)
 
         // when & then
@@ -145,20 +134,14 @@ class PlaceLikeServiceTest {
         val placeId = 200L
         val meetingPlaceId = 10L
 
-        val meetingPlace = MeetingPlace(
-            id = meetingPlaceId,
-            meetingId = meetingId,
-            placeId = placeId
-        )
-
         val savedPlaceLike = PlaceLike(
             id = 1L,
             meetingPlaceId = meetingPlaceId,
             userId = userId
         )
 
-        whenever(meetingPlaceRepository.findByMeetingIdAndPlaceId(meetingId, placeId))
-            .thenReturn(meetingPlace)
+        whenever(meetingPlaceRepository.findIdByMeetingIdAndPlaceId(meetingId, placeId))
+            .thenReturn(meetingPlaceId)
         whenever(placeLikeRepository.save(any()))
             .thenReturn(savedPlaceLike)
         whenever(placeLikeRepository.countByMeetingPlaceId(meetingPlaceId))
@@ -180,20 +163,14 @@ class PlaceLikeServiceTest {
         val placeId = 200L
         val meetingPlaceId = 10L
 
-        val meetingPlace = MeetingPlace(
-            id = meetingPlaceId,
-            meetingId = meetingId,
-            placeId = placeId
-        )
-
         val savedPlaceLike = PlaceLike(
             id = 1L,
             meetingPlaceId = meetingPlaceId,
             userId = userId
         )
 
-        whenever(meetingPlaceRepository.findByMeetingIdAndPlaceId(meetingId, placeId))
-            .thenReturn(meetingPlace)
+        whenever(meetingPlaceRepository.findIdByMeetingIdAndPlaceId(meetingId, placeId))
+            .thenReturn(meetingPlaceId)
         whenever(placeLikeRepository.save(any()))
             .thenReturn(savedPlaceLike)
         whenever(placeLikeRepository.countByMeetingPlaceId(meetingPlaceId))
@@ -221,14 +198,8 @@ class PlaceLikeServiceTest {
         val placeId = 200L
         val meetingPlaceId = 10L
 
-        val meetingPlace = MeetingPlace(
-            id = meetingPlaceId,
-            meetingId = meetingId,
-            placeId = placeId
-        )
-
-        whenever(meetingPlaceRepository.findByMeetingIdAndPlaceId(meetingId, placeId))
-            .thenReturn(meetingPlace)
+        whenever(meetingPlaceRepository.findIdByMeetingIdAndPlaceId(meetingId, placeId))
+            .thenReturn(meetingPlaceId)
         whenever(placeLikeRepository.save(any()))
             .thenThrow(DataIntegrityViolationException("Duplicate entry"))
         whenever(placeLikeRepository.countByMeetingPlaceId(meetingPlaceId))
