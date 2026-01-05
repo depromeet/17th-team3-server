@@ -6,6 +6,8 @@ plugins {
     kotlin("plugin.spring") version "1.9.25" apply false
     kotlin("plugin.jpa") version "1.9.25" apply false
     kotlin("kapt") version "1.9.25" apply false
+    jacoco
+    id("org.sonarqube") version "4.4.1.3373"
 }
 
 // 모든 프로젝트 공통 설정
@@ -25,11 +27,17 @@ subprojects {
     apply(plugin = "io.spring.dependency-management")
     apply(plugin = "org.jetbrains.kotlin.plugin.spring")
     apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
+    apply(plugin = "jacoco")
 
     configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
         imports {
             mavenBom("org.springframework.cloud:spring-cloud-dependencies:2024.0.1")
         }
+    }
+
+    // Jacoco 설정
+    configure<JacocoPluginExtension> {
+        toolVersion = "0.8.11"
     }
 
     // tasks 설정
@@ -62,6 +70,37 @@ subprojects {
         if (isCI) {
             outputs.upToDateWhen { false }
         }
+        
+        // Jacoco 리포트 생성을 위해 테스트 후 자동 실행
+        finalizedBy(tasks.named("jacocoTestReport"))
+    }
+
+    // Jacoco 테스트 리포트 설정
+    tasks.named<JacocoReport>("jacocoTestReport") {
+        dependsOn(tasks.named("test"))
+        
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+            csv.required.set(false)
+        }
+        
+        classDirectories.setFrom(
+            files(classDirectories.files.map {
+                fileTree(it) {
+                    exclude(
+                        "**/Q*.*",           // QueryDSL 생성 파일
+                        "**/*Application*",  // Application 클래스
+                        "**/*Config*",       // Config 클래스
+                        "**/*Dto*",          // DTO 클래스
+                        "**/*Request*",      // Request 클래스
+                        "**/*Response*",     // Response 클래스
+                        "**/*Entity*",       // Entity 클래스
+                        "**/*Exception*"     // Exception 클래스
+                    )
+                }
+            })
+        )
     }
 
     afterEvaluate {
@@ -72,6 +111,51 @@ subprojects {
             add("implementation", "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.7.3")
             add("implementation", "org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.7.3")
         }
+    }
+}
+
+// SonarQube 설정
+sonar {
+    properties {
+        property("sonar.projectKey", "depromeet_17th-team3-Server")
+        property("sonar.organization", "depromeet")
+        property("sonar.host.url", "https://sonarcloud.io")
+        
+        // 코드 커버리지 리포트 경로 (모든 서브모듈의 Jacoco 리포트)
+        property("sonar.coverage.jacoco.xmlReportPaths", 
+            subprojects.map { "${it.layout.buildDirectory.get().asFile}/reports/jacoco/test/jacocoTestReport.xml" }.joinToString(",")
+        )
+        
+        // 분석 제외 파일
+        property("sonar.exclusions", 
+            "**/Q*.java," +
+            "**/*Application.kt," +
+            "**/*Config.kt," +
+            "**/*Dto.kt," +
+            "**/*Request.kt," +
+            "**/*Response.kt," +
+            "**/*Entity.kt," +
+            "**/*Exception.kt"
+        )
+        
+        // 테스트 커버리지 제외 파일
+        property("sonar.coverage.exclusions", 
+            "**/Q*.java," +
+            "**/*Application.kt," +
+            "**/*Config.kt," +
+            "**/*Dto.kt," +
+            "**/*Request.kt," +
+            "**/*Response.kt," +
+            "**/*Entity.kt," +
+            "**/*Exception.kt"
+        )
+        
+        // Kotlin 소스 경로
+        property("sonar.sources", "src/main/kotlin")
+        property("sonar.tests", "src/test/kotlin")
+        
+        // Java 버전
+        property("sonar.java.source", "17")
     }
 }
 

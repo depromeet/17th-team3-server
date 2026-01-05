@@ -56,6 +56,20 @@ jobs:
         env:
           TZ: Asia/Seoul
       
+      - name: Generate Jacoco Test Coverage Report
+        if: always()
+        run: ./gradlew jacocoTestReport --stacktrace
+        env:
+          TZ: Asia/Seoul
+      
+      - name: SonarQube Analysis
+        if: always()
+        run: ./gradlew sonar --info
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TZ: Asia/Seoul
+      
       - name: Show test failures (if any)
         if: failure()
         run: |
@@ -71,6 +85,15 @@ jobs:
         with:
           name: test-reports
           path: '**/build/reports/tests/test'
+      
+      - name: Upload Jacoco coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-reports
+          path: |
+            **/build/reports/jacoco/test
+            **/build/reports/jacoco/test/jacocoTestReport.xml
       
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
