@@ -56,7 +56,7 @@ dependencies {
     testImplementation(files("libs/grinder-httpclient-3.9.1.jar"))
     testImplementation("junit:junit:4.13.2")
     testImplementation("commons-httpclient:commons-httpclient:3.1")
-    testImplementation("org.codehaus.groovy:groovy:3.0.5")
+    testImplementation("org.codehaus.groovy:groovy:3.0.22")
     
     // Test Dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-test")

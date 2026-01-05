@@ -47,6 +47,7 @@ jobs:
         run: ./gradlew build -x test --stacktrace
         env:
           TZ: Asia/Seoul
+          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
       
       - name: Run tests
         run: |
@@ -55,6 +56,7 @@ jobs:
           echo "Exit code: $?"
         env:
           TZ: Asia/Seoul
+          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
       
       - name: Generate Jacoco Test Coverage Report
         if: always()

@@ -120,6 +120,7 @@ sonar {
         property("sonar.projectKey", "depromeet_17th-team3-Server")
         property("sonar.organization", "depromeet")
         property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.gradle.skipCompile", "true")
         
         // 코드 커버리지 리포트 경로 (모든 서브모듈의 Jacoco 리포트)
         property("sonar.coverage.jacoco.xmlReportPaths", 
