@@ -51,17 +51,10 @@ jobs:
         env:
           TZ: Asia/Seoul
       
-      - name: Run tests
+      - name: Run Tests and Generate Coverage Report
         run: |
-          echo "=== Running all tests ==="
-          ./gradlew test --continue --stacktrace 2>&1 | tee test-output.log
-          echo "Exit code: $?"
-        env:
-          TZ: Asia/Seoul
-      
-      - name: Generate Jacoco Test Coverage Report
-        if: always()
-        run: ./gradlew jacocoTestReport --stacktrace
+          echo "=== Running tests and generating Jacoco report ==="
+          ./gradlew test jacocoTestReport --continue --stacktrace
         env:
           TZ: Asia/Seoul
       

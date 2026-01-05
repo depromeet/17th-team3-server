@@ -18,6 +18,13 @@ kapt {
     }
 }
 
+// 테스트에서 kapt 비활성화 (ngrinder 라이브러리 충돌 방지)
+tasks.withType<org.jetbrains.kotlin.gradle.internal.KaptGenerateStubsTask>().configureEach {
+    if (name.contains("Test")) {
+        enabled = false
+    }
+}
+
 dependencies {
     implementation(project(":ssolv-global-utils"))
     implementation(project(":ssolv-domain"))

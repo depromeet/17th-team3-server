@@ -6,7 +6,6 @@ plugins {
     kotlin("plugin.spring") version "1.9.25" apply false
     kotlin("plugin.jpa") version "1.9.25" apply false
     kotlin("kapt") version "1.9.25" apply false
-    jacoco
     id("org.sonarqube") version "4.4.1.3373"
 }
 
@@ -77,7 +76,6 @@ subprojects {
 
     // Jacoco 테스트 리포트 설정
     tasks.named<JacocoReport>("jacocoTestReport") {
-        dependsOn(tasks.named("test"))
         
         reports {
             xml.required.set(true)
