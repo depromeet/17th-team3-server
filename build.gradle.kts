@@ -160,7 +160,11 @@ sonar {
     }
 }
 
-// 루트 프로젝트 빌드 비활성화
+// 루트 프로젝트 빌드 비활성화 (sonar, jacoco 관련 태스크 제외)
 tasks.configureEach {
-    onlyIf { false }
+    if (name == "sonar" || name.contains("jacoco") || name == "help") {
+        onlyIf { true }
+    } else {
+        onlyIf { false }
+    }
 }

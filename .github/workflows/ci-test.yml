@@ -43,11 +43,13 @@ jobs:
           echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
           echo "kotlin.incremental=false" >> ~/.gradle/gradle.properties
       
+      - name: Check Java Version
+        run: java -version
+        
       - name: Build project (kapt 먼저 실행)
         run: ./gradlew build -x test --stacktrace
         env:
           TZ: Asia/Seoul
-          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
       
       - name: Run tests
         run: |
@@ -56,7 +58,6 @@ jobs:
           echo "Exit code: $?"
         env:
           TZ: Asia/Seoul
-          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
       
       - name: Generate Jacoco Test Coverage Report
         if: always()
