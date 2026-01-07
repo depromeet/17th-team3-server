@@ -28,7 +28,8 @@ jobs:
         run: |
           ./gradlew :ssolv-api-core:jib :ssolv-api-place:jib \
             -Djib.to.auth.username=${{ secrets.REGISTRY_USERNAME }} \
-            -Djib.to.auth.password=${{ secrets.REGISTRY_PASSWORD }}
+            -Djib.to.auth.password=${{ secrets.REGISTRY_PASSWORD }} \
+            -Djava.net.preferIPv4Stack=true
 
       - name: EC2 Deployment
         uses: appleboy/ssh-action@master

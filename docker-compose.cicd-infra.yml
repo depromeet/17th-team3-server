@@ -3,7 +3,8 @@ services:
     container_name: nginx-cicd
     image: nginx:1.29.0
     ports:
-      - "900:80"
+      - "443:443"
+      - "900:80" # 기존 관리 페이지용 유지 (필요 시)
     volumes:
       - ./ssolv-infrastructure/nginx/nginx-cicd.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro

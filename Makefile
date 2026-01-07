@@ -10,7 +10,7 @@ DOCKER_COMPOSE ?= docker compose
 COMPOSE_PROD := docker-compose.prod.yml
 COMPOSE_MONITORING := docker-compose.monitoring.yml
 COMPOSE_CICD := docker-compose.cicd-infra.yml
-COMPOSE_NGRINDER := docker-compose.ngrinder.yml
+COMPOSE_NGRINDER := docker-compose.test-dev.yml
 
 help:
 	@echo "Usage: make <target>"
@@ -68,7 +68,7 @@ up-ngrinder:
 	@mkdir -p ssolv-infrastructure/ngrinder/agent
 	@mkdir -p ssolv-infrastructure/ngrinder/agent-2
 	$(DOCKER_COMPOSE) -f $(COMPOSE_NGRINDER) up -d
-	@echo "nGrinder web console: http://localhost:16001"
+	@echo "nGrinder web console: http://localhost:8000"
 
 down-ngrinder:
 	$(DOCKER_COMPOSE) -f $(COMPOSE_NGRINDER) down

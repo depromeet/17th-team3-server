@@ -41,12 +41,11 @@ tasks {
 }
 
 jib {
-    setAllowInsecureRegistries(true)
     from {
         image = "eclipse-temurin:17-jre-alpine"
     }
     to {
-        image = "registry.ssolv.site:900/core-server"
+        image = "registry.ssolv.site/core-server"
         tags = setOf("latest", "${project.version}")
     }
     container {

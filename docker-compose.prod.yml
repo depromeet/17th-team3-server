@@ -1,7 +1,7 @@
 services:
   core-server:
     container_name: core-server
-    image: ${DOCKER_IMAGE_CORE:-registry.ssolv.site:900/core-server:latest}
+    image: ${DOCKER_IMAGE_CORE:registry.ssolv.site/core-server:latest}
     env_file:
       - .env
     environment:
@@ -31,7 +31,7 @@ services:
 
   place-server:
     container_name: place-server
-    image: ${DOCKER_IMAGE_PLACE:-registry.ssolv.site:900/place-server:latest}
+    image: ${DOCKER_IMAGE_PLACE:registry.ssolv.site/place-server:latest}
     env_file:
       - .env
     environment:
