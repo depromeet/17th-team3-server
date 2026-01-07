@@ -2,8 +2,8 @@ name: CD Deploy
 
 on:
   push:
-    branches: [ main ] # dev -> main 머지 시 실행
-  workflow_dispatch:   # 수동 실행 허용
+    branches: [ main ]  # dev -> main 머지 시 실행
+  workflow_dispatch:    # 수동 실행 허용
 
 jobs:
   deploy:
