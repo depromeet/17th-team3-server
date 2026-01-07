@@ -36,7 +36,7 @@ class InviteTokenService(
             throw IllegalStateException("Ended meeting ID: $meetingId")
         }
 
-        val endAtTimestamp = meeting.endAt!!.toInstant(ZoneOffset.UTC).toEpochMilli()
+        val endAtTimestamp = meeting.endAt?.toInstant(ZoneOffset.UTC)?.toEpochMilli() ?: Long.MAX_VALUE
         
         val encodedData = DataEncoder.encodeWithSeparator(SEPARATOR, meetingId.toString(), endAtTimestamp.toString())
         return "$HTTPS_PROTOCOL/$BASE_DOMAIN/$API_VERSION_V1/meetings/validate-invite?token=$encodedData"

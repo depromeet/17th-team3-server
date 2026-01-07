@@ -61,7 +61,7 @@ class CreateMeetingService(
             id = null,
             meetingId = meetingId,
             userId = userId,
-            attendeeNickname = null,
+            attendeeNickname = user.nickname ?: "Guest",
             muzziColor = MuzziColor.DEFAULT,
             createdAt = null,
             updatedAt = null
