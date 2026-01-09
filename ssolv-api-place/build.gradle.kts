@@ -41,7 +41,7 @@ tasks {
 
 jib {
     from {
-        image = "eclipse-temurin:17-jre-alpine"
+        image = "eclipse-temurin:17-jre"
     }
     to {
         image = "registry.ssolv.site/place-server"
