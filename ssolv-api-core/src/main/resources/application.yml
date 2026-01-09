@@ -52,3 +52,15 @@ kakao:
   redirect-uri: http://localhost:8080/auth/callback
   token-uri: https://kauth.kakao.com/oauth/token
   user-info-uri: https://kapi.kakao.com/v2/user/me
+
+# Swagger UI Aggregation
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui/index.html
+    urls:
+      - name: Core API
+        url: /v3/api-docs
+      - name: Place API
+        url: /places/v3/api-docs
