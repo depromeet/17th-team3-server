@@ -29,3 +29,20 @@ api:
     places:
       api-key: ${GOOGLE_PLACES_API_KEY}
       base-url: https://places.googleapis.com
+
+# WAS 헬스 체크 및 모니터링 관련
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  tracing:
+    sampling:
+      probability: 0.1
+  otlp:
+    tracing:
+      endpoint: ${OTLP_ENDPOINT:http://alloy:4318/v1/traces}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

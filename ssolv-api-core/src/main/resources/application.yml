@@ -31,7 +31,7 @@ management:
       probability: 0.1
   otlp:
     tracing:
-      endpoint: http://alloy:4318/v1/traces
+      endpoint: ${OTLP_ENDPOINT:http://alloy:4318/v1/traces}
   prometheus:
     metrics:
       export:
