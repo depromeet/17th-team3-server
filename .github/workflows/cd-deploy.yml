@@ -2,8 +2,8 @@ name: CD Deploy
 
 on:
   push:
-    branches: [ main ]  # dev -> main 머지 시 실행
-  workflow_dispatch:    # 수동 실행 허용
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -44,6 +44,9 @@ jobs:
             # 최신 코드(docker-compose.prod.yml 등) 가져오기
             git fetch origin
             git reset --hard origin/main
+            
+            # 확실한 이미지 갱신을 위해 로컬의 기존 latest 이미지 강제 삭제
+            docker rmi -f registry.ssolv.site/core-server:latest registry.ssolv.site/place-server:latest || true
             
             # 최신 이미지 가져오기
             docker compose -f docker-compose.prod.yml pull
