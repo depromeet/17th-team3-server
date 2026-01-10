@@ -6,8 +6,8 @@ object ContextConstants {
 
     const val API_VERSION_V1 = "$BASE_API_PREFIX/v1"
 
-    const val BASE_DOMAIN = "api.momuzzi.site"
-    const val WWW_DOMAIN = "www.momuzzi.site"
+    const val BASE_DOMAIN = "api.ssolv.site"
+    const val WWW_DOMAIN = "www.ssolv.site"
     const val HTTPS_PROTOCOL = "https://"
 
 }

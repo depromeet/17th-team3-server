@@ -57,7 +57,7 @@ kakao:
 springdoc:
   # api-docs path 설정 제거 (기본값 사용)
   swagger-ui:
-    path: /swagger-ui/index.html
+    path: /swagger-ui
     urls:
       - name: Core API
         url: /v3/api-docs
