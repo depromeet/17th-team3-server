@@ -55,7 +55,6 @@ kakao:
 
 springdoc:
   swagger-ui:
-    path: /swagger-ui/index.html
     urls:
       - name: Core API
         url: /v3/api-docs
