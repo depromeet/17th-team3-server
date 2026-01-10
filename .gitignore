@@ -65,3 +65,6 @@ module-infra/nginx/.htpasswd
 
 # nGrinder data
 ssolv-infrastructure/ngrinder/
+
+# Eclipse / VSCode output
+**/bin/
