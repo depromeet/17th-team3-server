@@ -48,7 +48,11 @@ jobs:
             # 최신 이미지 가져오기
             docker compose -f docker-compose.prod.yml pull
             
-            # 서비스 재시작 (변경된 컨테이너만)
+            # 확실한 갱신을 위해 관련 컨테이너 중지 및 삭제 (충돌 방지: Stop -> Remove -> Up)
+            docker compose -f docker-compose.prod.yml stop core-server place-server nginx-app
+            docker compose -f docker-compose.prod.yml rm -f core-server place-server nginx-app
+            
+            # 서비스 시작
             docker compose -f docker-compose.prod.yml up -d
             
             # 배포 검증 (Health Check)
