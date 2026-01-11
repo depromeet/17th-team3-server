@@ -15,12 +15,31 @@ data class PlacesTextSearchResponse(
         @JsonProperty("formattedAddress")
         val formattedAddress: String,
         val rating: Double? = null,
-        @JsonProperty("userRatingCount")
         val userRatingCount: Int? = null,
         @JsonProperty("currentOpeningHours")
         val currentOpeningHours: OpeningHours? = null,
-        val types: List<String>? = null
+        val location: Location,
+        val types: List<String>? = null,
+        val photos: List<Photo>? = null
     ) {
+        data class Location(
+            val latitude: Double,
+            val longitude: Double
+        )
+
+        data class Photo(
+            val name: String,
+            val widthPx: Int? = null,
+            val heightPx: Int? = null,
+            val authorAttributions: List<AuthorAttribution>? = null
+        )
+
+        data class AuthorAttribution(
+            val displayName: String,
+            val uri: String,
+            val photoUri: String
+        )
+
         data class DisplayName(
             val text: String,
             val languageCode: String? = null
