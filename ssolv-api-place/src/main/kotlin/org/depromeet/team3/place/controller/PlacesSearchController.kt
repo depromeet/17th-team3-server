@@ -47,7 +47,7 @@ class PlacesSearchController(
 
     @Operation(
         summary = "장소 사진 조회 (프록시)",
-        description = "구글 플레이스 사진을 프록시하여 반환합니다. CloudFront 캐싱을 위해 사용됩니다."
+        description = "구글 플레이스 사진을 프록시하여 반환합니다. "
     )
     @GetMapping("/photos/{photoName:.+}", produces = [MediaType.IMAGE_JPEG_VALUE])
     suspend fun getPhoto(

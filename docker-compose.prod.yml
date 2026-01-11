@@ -10,10 +10,9 @@ services:
       - MYSQL_PASSWORD=${PROD_DB_PASSWORD}
       - MYSQL_URL=jdbc:mysql://${PROD_DB_ENDPOINT}:3306/${PROD_DB_NAME}
       - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0
+      - OTLP_ENDPOINT=http://alloy:4318/v1/traces
     networks:
       - ssolv_prod_network
-    external_links:
-      - signoz-otel-collector:signoz-otel-collector
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -39,6 +38,7 @@ services:
       - MYSQL_USER=${PROD_DB_USERNAME}
       - MYSQL_PASSWORD=${PROD_DB_PASSWORD}
       - MYSQL_URL=jdbc:mysql://${PROD_DB_ENDPOINT}:3306/${PROD_DB_NAME}
+      - OTLP_ENDPOINT=http://alloy:4318/v1/traces
     networks:
       - ssolv_prod_network
     restart: unless-stopped

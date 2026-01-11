@@ -1,4 +1,4 @@
-package org.depromeet.team3.place.application.scheduler
+package org.depromeet.team3.batch.scheduler
 
 import org.depromeet.team3.meetingplacesearch.MeetingPlaceSearchRepository
 import org.slf4j.LoggerFactory
@@ -23,8 +23,7 @@ class MeetingPlaceSearchCleanupScheduler(
     @Transactional
     fun deleteExpired() {
         val now = LocalDateTime.now()
-        logger.info("모임 장소 검색 결과 정리 시작: 기준 시각={}", now)
-        
+
         try {
             val deletedCount = repository.deleteExpired(now)
             logger.info("만료된 모임 장소 검색 결과 삭제 완료: {}건", deletedCount)

@@ -21,6 +21,17 @@ object PlaceTestDataFactory {
                 userRatingCount = 100,
                 currentOpeningHours = PlacesTextSearchResponse.Place.OpeningHours(
                     openNow = true
+                ),
+                location = PlacesTextSearchResponse.Place.Location(
+                    latitude = 37.5 + index * 0.01,
+                    longitude = 127.0 + index * 0.01
+                ),
+                photos = listOf(
+                    PlacesTextSearchResponse.Place.Photo(
+                        name = "places/${placeId ?: "place_id_$index"}/photos/ref",
+                        widthPx = 400,
+                        heightPx = 400
+                    )
                 )
             )
         }

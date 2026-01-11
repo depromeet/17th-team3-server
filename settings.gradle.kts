@@ -7,4 +7,5 @@ include(
     "ssolv-domain",
     "ssolv-global-utils",
     "ssolv-infrastructure",
+    "ssolv-batch",
 )

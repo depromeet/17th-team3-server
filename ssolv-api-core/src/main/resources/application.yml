@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: framework
 
 spring:
   application:
@@ -30,7 +31,7 @@ management:
       probability: 0.1
   otlp:
     tracing:
-      endpoint: http://alloy:4318/v1/traces
+      endpoint: ${OTLP_ENDPOINT:http://alloy:4318/v1/traces}
   prometheus:
     metrics:
       export:
@@ -53,11 +54,8 @@ kakao:
   token-uri: https://kauth.kakao.com/oauth/token
   user-info-uri: https://kapi.kakao.com/v2/user/me
 
-# Swagger UI Aggregation
 springdoc:
-  # api-docs path 설정 제거 (기본값 사용)
   swagger-ui:
-    path: /swagger-ui/index.html
     urls:
       - name: Core API
         url: /v3/api-docs

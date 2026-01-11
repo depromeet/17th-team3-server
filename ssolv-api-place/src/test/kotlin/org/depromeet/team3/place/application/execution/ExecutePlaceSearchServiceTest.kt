@@ -1,7 +1,10 @@
 package org.depromeet.team3.place.application.execution
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
+import org.depromeet.team3.common.GooglePlacesApiProperties
 import org.depromeet.team3.meetingplace.MeetingPlace
 import org.depromeet.team3.meetingplace.MeetingPlaceRepository
 import org.depromeet.team3.place.PlaceEntity
@@ -10,7 +13,6 @@ import org.depromeet.team3.place.application.model.PlaceSearchPlan
 import org.depromeet.team3.place.application.plan.CreateSurveyKeywordService
 import org.depromeet.team3.place.dto.request.PlacesSearchRequest
 import org.depromeet.team3.place.model.PlacesTextSearchResponse
-import org.depromeet.team3.place.util.PlaceDetailsProcessor
 import org.depromeet.team3.placelike.PlaceLikeRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,27 +26,29 @@ import java.util.ArrayDeque
 class ExecutePlaceSearchServiceTest {
 
     private lateinit var placeQuery: FakePlaceQuery
-    private lateinit var placeDetailsProcessor: FakePlaceDetailsProcessor
     private lateinit var meetingPlaceRepository: MeetingPlaceRepository
     private lateinit var placeLikeRepository: PlaceLikeRepository
     private lateinit var searchService: MeetingPlaceSearchService
+    private lateinit var googlePlacesApiProperties: GooglePlacesApiProperties
 
     private lateinit var service: ExecutePlaceSearchService
 
     @BeforeEach
     fun setup() {
         placeQuery = FakePlaceQuery()
-        placeDetailsProcessor = FakePlaceDetailsProcessor()
         meetingPlaceRepository = mock()
         placeLikeRepository = mock()
         searchService = mock()
+        googlePlacesApiProperties = mock {
+            on { proxyBaseUrl } doReturn "https://proxy.url"
+        }
 
         service = ExecutePlaceSearchService(
             placeQuery = placeQuery,
-            placeDetailsProcessor = placeDetailsProcessor,
             meetingPlaceRepository = meetingPlaceRepository,
             placeLikeRepository = placeLikeRepository,
-            searchService = searchService
+            searchService = searchService,
+            googlePlacesApiProperties = googlePlacesApiProperties
         )
 
         searchService.stub {
@@ -53,7 +57,7 @@ class ExecutePlaceSearchServiceTest {
 
         meetingPlaceRepository.stub {
             onBlocking { findByMeetingId(any()) }.doReturn(emptyList())
-            onBlocking { saveAll(any()) }.doAnswer { invocation ->
+            onBlocking { saveAll(any<List<MeetingPlace>>()) }.doAnswer { invocation ->
                 invocation.getArgument<List<MeetingPlace>>(0)
             }
         }
@@ -71,35 +75,34 @@ class ExecutePlaceSearchServiceTest {
             fallbackKeyword = "fallback"
         )
 
-        // DB에 저장된 결과 설정
         val storedItem1 = org.depromeet.team3.place.dto.response.PlacesSearchResponse.PlaceItem(
             placeId = 1L,
-                    name = "사진 없음",
-                    address = "주소",
-                    rating = 4.5,
-                    userRatingsTotal = 10,
-                    openNow = true,
-                    photos = emptyList(),
-                    link = "link",
-                    weekdayText = emptyList(),
-                    topReview = null,
-                    priceRange = null,
+            name = "사진 없음",
+            address = "주소",
+            rating = 4.5,
+            userRatingsTotal = 10,
+            openNow = true,
+            photos = emptyList(),
+            link = "link",
+            weekdayText = emptyList(),
+            topReview = null,
+            priceRange = null,
             addressDescriptor = null,
             likeCount = 0,
             isLiked = false
         )
         val storedItem2 = org.depromeet.team3.place.dto.response.PlacesSearchResponse.PlaceItem(
             placeId = 2L,
-                    name = "사진 있음",
-                    address = "주소",
-                    rating = 4.0,
-                    userRatingsTotal = 8,
-                    openNow = true,
-                    photos = listOf("image"),
-                    link = "link",
-                    weekdayText = emptyList(),
-                    topReview = null,
-                    priceRange = null,
+            name = "사진 있음",
+            address = "주소",
+            rating = 4.0,
+            userRatingsTotal = 8,
+            openNow = true,
+            photos = listOf("image"),
+            link = "link",
+            weekdayText = emptyList(),
+            topReview = null,
+            priceRange = null,
             addressDescriptor = null,
             likeCount = 0,
             isLiked = false
@@ -117,13 +120,12 @@ class ExecutePlaceSearchServiceTest {
 
         val response = service.search(request, plan)
 
-        // 저장된 결과를 반환하는지 확인
         assertThat(response.items).hasSize(2)
         assertThat(response.items.map { it.name }).containsExactly("사진 없음", "사진 있음")
     }
 
     @Test
-    fun `저장된 결과 없을 시 사진 없는 결과를 fallback 후보 중 사진 있는 항목으로 보완한다`() = runTest {
+    fun `저장된 결과 없을 시 검색 결과를 DB에 저장하고 반환한다`() = runTest {
         val keywordCandidate = CreateSurveyKeywordService.KeywordCandidate(
             keyword = "키워드 맛집",
             weight = 1.0,
@@ -142,41 +144,26 @@ class ExecutePlaceSearchServiceTest {
                 displayName = PlacesTextSearchResponse.Place.DisplayName("키워드 맛집 $index"),
                 formattedAddress = "주소 $index",
                 rating = 5.0 - index * 0.1,
-                userRatingCount = 10 - index
+                userRatingCount = 10 - index,
+                location = PlacesTextSearchResponse.Place.Location(37.5 + index, 127.0 + index),
+                photos = listOf(PlacesTextSearchResponse.Place.Photo("photo-$index", 400, 400))
             )
         }
 
         placeQuery.stubTextSearch("키워드 맛집", PlacesTextSearchResponse(textSearchPlaces))
         placeQuery.stubTextSearch("fallback 맛집", PlacesTextSearchResponse(emptyList()))
-        placeQuery.stubFindByGooglePlaceIds { ids ->
-            ids.mapIndexed { idx, id ->
+        
+        // savePlacesFromTextSearch를 모의(mock) 처리하기 위해 FakePlaceQuery의 해당 메서드를 오버라이드
+        placeQuery.stubSavePlaces { places ->
+            places.mapIndexed { idx, place ->
                 PlaceEntity(
                     id = idx.toLong() + 1,
-                    googlePlaceId = id,
-                    name = "장소 $id",
-                    address = "주소 $id",
-                    rating = 4.0,
-                    userRatingsTotal = 100
-                )
-            }
-        }
-
-        placeDetailsProcessor.stubDetails { requested ->
-            requested.map { place ->
-                val idx = place.id.removePrefix("P").toIntOrNull() ?: 0
-                PlaceDetailsProcessor.PlaceDetailResult(
-                    placeId = place.id,
-                    name = "장소 ${place.id}",
+                    googlePlaceId = place.id,
+                    name = place.displayName.text,
                     address = place.formattedAddress,
                     rating = place.rating ?: 0.0,
                     userRatingsTotal = place.userRatingCount ?: 0,
-                    openNow = true,
-                    photos = if (idx < 10) emptyList() else listOf("photo-$idx"),
-                    link = "link-$idx",
-                    weekdayText = emptyList(),
-                    topReview = null,
-                    priceRange = null,
-                    addressDescriptor = null
+                    photos = place.photos?.joinToString(",") { it.name }
                 )
             }
         }
@@ -186,18 +173,18 @@ class ExecutePlaceSearchServiceTest {
         val response = service.search(request, plan)
 
         assertThat(response.items).hasSize(10)
-        assertThat(response.items.first().photos).isNotEmpty()
-        assertThat(response.items.any { it.name == "장소 P10" }).isTrue()
+        assertThat(response.items.first().name).contains("키워드 맛집")
+        assertThat(response.items.all { it.photos?.isNotEmpty() == true }).isTrue()
     }
 }
 
-private class FakePlaceQuery : PlaceQuery(
+private open class FakePlaceQuery : PlaceQuery(
     googlePlacesClient = mock(),
-    placeJpaRepository = mock(),
-    placeAddressResolver = mock()
+    placeJpaRepository = mock()
 ) {
     private val textSearchResponses = mutableMapOf<String, ArrayDeque<PlacesTextSearchResponse>>()
     private var findByIdsProvider: (List<String>) -> List<PlaceEntity> = { emptyList() }
+    private var savePlacesProvider: (List<PlacesTextSearchResponse.Place>) -> List<PlaceEntity> = { emptyList() }
 
     fun stubTextSearch(query: String, vararg responses: PlacesTextSearchResponse) {
         textSearchResponses[query] = ArrayDeque(responses.asList())
@@ -207,10 +194,8 @@ private class FakePlaceQuery : PlaceQuery(
         findByIdsProvider = provider
     }
 
-    fun stubFindByGooglePlaceIds(entities: List<PlaceEntity>) {
-        findByIdsProvider = { ids ->
-            ids.mapNotNull { id -> entities.find { it.googlePlaceId == id } }
-        }
+    fun stubSavePlaces(provider: (List<PlacesTextSearchResponse.Place>) -> List<PlaceEntity>) {
+        savePlacesProvider = provider
     }
 
     override suspend fun textSearch(
@@ -230,26 +215,7 @@ private class FakePlaceQuery : PlaceQuery(
 
     override fun findByGooglePlaceIds(googlePlaceIds: List<String>): List<PlaceEntity> =
         findByIdsProvider(googlePlaceIds)
+
+    override suspend fun savePlacesFromTextSearch(places: List<PlacesTextSearchResponse.Place>): List<PlaceEntity> =
+        savePlacesProvider(places)
 }
-
-private class FakePlaceDetailsProcessor : PlaceDetailsProcessor(
-    placeQuery = mock(),
-    placeAddressResolver = mock(),
-    googlePlacesApiProperties = mock()
-) {
-    private var provider: (List<PlacesTextSearchResponse.Place>) -> List<PlaceDetailResult> =
-        { emptyList() }
-
-    fun stubDetails(results: List<PlaceDetailResult>) {
-        provider = { results }
-    }
-
-    fun stubDetails(provider: (List<PlacesTextSearchResponse.Place>) -> List<PlaceDetailResult>) {
-        this.provider = provider
-    }
-
-    override suspend fun fetchPlaceDetailsInParallel(
-        places: List<PlacesTextSearchResponse.Place>
-    ): List<PlaceDetailResult> = provider(places)
-}
-
