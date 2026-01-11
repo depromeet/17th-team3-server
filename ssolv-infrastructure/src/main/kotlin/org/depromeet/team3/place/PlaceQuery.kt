@@ -34,8 +34,8 @@ class PlaceQuery(
     @Transactional
     suspend fun savePlacesFromTextSearch(
         places: List<PlacesTextSearchResponse.Place>
-    ): List<PlaceEntity> = withContext(Dispatchers.IO) {
-        if (places.isEmpty()) return@withContext emptyList()
+    ): List<PlaceEntity> {
+        if (places.isEmpty()) return emptyList()
 
         val googlePlaceIds = places.map { it.id }
         val existingPlaces = placeJpaRepository.findByGooglePlaceIdIn(googlePlaceIds)
@@ -53,10 +53,10 @@ class PlaceQuery(
             PlaceEntity(
                 id = existing?.id,
                 googlePlaceId = existing?.googlePlaceId ?: place.id,
-                name = place.displayName.text,
-                address = place.formattedAddress,
-                latitude = place.location.latitude,
-                longitude = place.location.longitude,
+                name = place.displayName?.text ?: existing?.name ?: "Unknown",
+                address = place.formattedAddress ?: existing?.address ?: "",
+                latitude = place.location?.latitude ?: existing?.latitude,
+                longitude = place.location?.longitude ?: existing?.longitude,
                 rating = place.rating ?: existing?.rating ?: 0.0,
                 userRatingsTotal = place.userRatingCount ?: existing?.userRatingsTotal ?: 0,
                 openNow = place.currentOpeningHours?.openNow ?: existing?.openNow,
@@ -74,7 +74,7 @@ class PlaceQuery(
             )
         }
 
-        placeJpaRepository.saveAll(entities).toList()
+        return placeJpaRepository.saveAll(entities).toList()
     }
 
     // Google Place ID 목록으로 Place 엔티티 조회

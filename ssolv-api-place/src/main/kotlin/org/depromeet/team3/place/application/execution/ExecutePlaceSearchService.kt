@@ -80,7 +80,9 @@ class ExecutePlaceSearchService(
             .sortedByDescending { keywordResult.placeWeights[it.id] ?: 0.0 }
             .take(totalFetchSize + photoFallbackBuffer)
         
-        val savedEntities = placeQuery.savePlacesFromTextSearch(placesToProcess)
+        val savedEntities = withContext(Dispatchers.IO) {
+            placeQuery.savePlacesFromTextSearch(placesToProcess)
+        }
         
         if (savedEntities.isEmpty()) {
             logger.info("검색된 장소의 DB 저장 결과 없음 - keywords={}, meetingId={}", keywordResult.usedKeywords, request.meetingId)
@@ -114,8 +116,8 @@ class ExecutePlaceSearchService(
 
                 PlacesSearchResponse.PlaceItem(
                     placeId = placeDbId,
-                    name = entity.name,
-                    address = entity.address.replace("대한민국 ", ""),
+                    name = entity.name ?: "",
+                    address = entity.address?.replace("대한민국 ", "") ?: "",
                     rating = entity.rating,
                     userRatingsTotal = entity.userRatingsTotal,
                     openNow = entity.openNow,
@@ -128,7 +130,7 @@ class ExecutePlaceSearchService(
                     },
                     link = entity.link ?: "",
                     weekdayText = entity.weekdayText?.split("\n"),
-                    topReview = let {
+                    topReview = run {
                         val reviewRating = entity.topReviewRating
                         val reviewText = entity.topReviewText
                         if (reviewRating != null && reviewText != null) {
@@ -513,7 +515,7 @@ class ExecutePlaceSearchService(
         }
     }
 
-    private suspend fun createOrGetMeetingPlaces(meetingId: Long, placeDbIds: List<Long>): List<MeetingPlace> {
+    private suspend fun createOrGetMeetingPlaces(meetingId: Long, placeDbIds: List<Long>): List<MeetingPlace> = withContext(Dispatchers.IO) {
         val existingMeetingPlaces = meetingPlaceRepository.findByMeetingId(meetingId)
         val existingPlaceIds = existingMeetingPlaces.map { it.placeId }.toSet()
 
@@ -526,7 +528,7 @@ class ExecutePlaceSearchService(
                 )
             }
 
-        return if (newMeetingPlaces.isNotEmpty()) {
+        if (newMeetingPlaces.isNotEmpty()) {
             val saved = meetingPlaceRepository.saveAll(newMeetingPlaces)
             existingMeetingPlaces + saved
         } else {

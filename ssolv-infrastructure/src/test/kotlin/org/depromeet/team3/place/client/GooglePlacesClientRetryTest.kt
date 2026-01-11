@@ -3,7 +3,6 @@ package org.depromeet.team3.place.client
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.depromeet.team3.common.GooglePlacesApiProperties
-import org.depromeet.team3.common.exception.ErrorCode
 import org.depromeet.team3.place.exception.PlaceSearchException
 import org.depromeet.team3.place.model.PlacesTextSearchRequest
 import org.depromeet.team3.place.model.PlacesTextSearchResponse
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClient
-import org.springframework.web.client.RestClientException
 
 class GooglePlacesClientRetryTest {
 
@@ -41,14 +39,14 @@ class GooglePlacesClientRetryTest {
         
         val requestBodyUriSpec = mock<RestClient.RequestBodyUriSpec>()
         val requestBodySpec = mock<RestClient.RequestBodySpec>()
-        val requestHeadersSpec = mock<RestClient.RequestHeadersSpec<*>>()
         val responseSpec = mock<RestClient.ResponseSpec>()
         
         whenever(restClient.post()).thenReturn(requestBodyUriSpec)
         whenever(requestBodyUriSpec.uri(any<String>())).thenReturn(requestBodySpec)
         whenever(requestBodySpec.header(any<String>(), any<String>())).thenReturn(requestBodySpec)
-        doReturn(requestHeadersSpec).whenever(requestBodySpec).body(any<PlacesTextSearchRequest>())
-        whenever(requestHeadersSpec.retrieve()).thenReturn(responseSpec)
+        // body() returns RequestBodySpec
+        doReturn(requestBodySpec).whenever(requestBodySpec).body(any<PlacesTextSearchRequest>())
+        whenever(requestBodySpec.retrieve()).thenReturn(responseSpec)
         whenever(responseSpec.body(PlacesTextSearchResponse::class.java))
             .thenThrow(createHttpClientErrorException(500))
             .thenReturn(mockResponse)
@@ -64,14 +62,13 @@ class GooglePlacesClientRetryTest {
         val query = "맛집"
         val requestBodyUriSpec = mock<RestClient.RequestBodyUriSpec>()
         val requestBodySpec = mock<RestClient.RequestBodySpec>()
-        val requestHeadersSpec = mock<RestClient.RequestHeadersSpec<*>>()
         val responseSpec = mock<RestClient.ResponseSpec>()
         
         whenever(restClient.post()).thenReturn(requestBodyUriSpec)
         whenever(requestBodyUriSpec.uri(any<String>())).thenReturn(requestBodySpec)
         whenever(requestBodySpec.header(any<String>(), any<String>())).thenReturn(requestBodySpec)
-        doReturn(requestHeadersSpec).whenever(requestBodySpec).body(any<PlacesTextSearchRequest>())
-        whenever(requestHeadersSpec.retrieve()).thenReturn(responseSpec)
+        doReturn(requestBodySpec).whenever(requestBodySpec).body(any<PlacesTextSearchRequest>())
+        whenever(requestBodySpec.retrieve()).thenReturn(responseSpec)
         whenever(responseSpec.body(PlacesTextSearchResponse::class.java))
             .thenThrow(createHttpClientErrorException(500))
 

@@ -18,7 +18,7 @@ data class PlacesTextSearchResponse(
         val userRatingCount: Int? = null,
         @JsonProperty("currentOpeningHours")
         val currentOpeningHours: OpeningHours? = null,
-        val location: Location,
+        val location: Location?,
         val types: List<String>? = null,
         val photos: List<Photo>? = null
     ) {
@@ -35,9 +35,9 @@ data class PlacesTextSearchResponse(
         )
 
         data class AuthorAttribution(
-            val displayName: String,
-            val uri: String,
-            val photoUri: String
+            val displayName: String? = null,
+            val uri: String? = null,
+            val photoUri: String? = null
         )
 
         data class DisplayName(

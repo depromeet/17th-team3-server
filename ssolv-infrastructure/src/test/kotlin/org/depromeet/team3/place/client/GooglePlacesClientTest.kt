@@ -48,14 +48,13 @@ class GooglePlacesClientTest {
 
         val requestBodyUriSpec = mock<RestClient.RequestBodyUriSpec>()
         val requestBodySpec = mock<RestClient.RequestBodySpec>()
-        val requestHeadersSpec = mock<RestClient.RequestHeadersSpec<*>>()
         val responseSpec = mock<RestClient.ResponseSpec>()
 
         whenever(restClient.post()).thenReturn(requestBodyUriSpec)
         whenever(requestBodyUriSpec.uri(any<String>())).thenReturn(requestBodySpec)
         whenever(requestBodySpec.header(any<String>(), any<String>())).thenReturn(requestBodySpec)
-        doReturn(requestHeadersSpec).whenever(requestBodySpec).body(any<PlacesTextSearchRequest>())
-        whenever(requestHeadersSpec.retrieve()).thenReturn(responseSpec)
+        doReturn(requestBodySpec).whenever(requestBodySpec).body(any<PlacesTextSearchRequest>())
+        whenever(requestBodySpec.retrieve()).thenReturn(responseSpec)
         whenever(responseSpec.body(PlacesTextSearchResponse::class.java)).thenReturn(mockResponse)
 
         val result = googlePlacesClient.textSearch(query)
