@@ -9,6 +9,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.slf4j.MDCContext
+import org.depromeet.team3.common.GooglePlacesApiProperties
 import org.depromeet.team3.common.exception.ErrorCode
 import org.depromeet.team3.meeting.MeetingQuery
 import org.depromeet.team3.meetingplace.MeetingPlace
@@ -20,7 +21,6 @@ import org.depromeet.team3.place.dto.request.PlacesSearchRequest
 import org.depromeet.team3.place.dto.response.PlacesSearchResponse
 import org.depromeet.team3.place.exception.PlaceSearchException
 import org.depromeet.team3.place.model.PlacesTextSearchResponse
-import org.depromeet.team3.place.util.PlaceDetailsProcessor
 import org.depromeet.team3.placelike.PlaceLikeRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -35,16 +35,16 @@ import kotlin.math.ln
 @Service
 class ExecutePlaceSearchService(
     private val placeQuery: PlaceQuery,
-    private val placeDetailsProcessor: PlaceDetailsProcessor,
     private val meetingPlaceRepository: MeetingPlaceRepository,
     private val placeLikeRepository: PlaceLikeRepository,
-    private val searchService: MeetingPlaceSearchService
+    private val searchService: MeetingPlaceSearchService,
+    private val googlePlacesApiProperties: GooglePlacesApiProperties
 ) {
 
     private val logger = LoggerFactory.getLogger(ExecutePlaceSearchService::class.java)
     private val totalFetchSize = 10  // 최종 반환 개수
     private val photoFallbackBuffer = 5  // 사진 없는 결과를 대체할 여분 슬롯
-    private val keywordFetchSize = 5  // 키워드당 API 요청 개수 (API 호출 비용 절감)
+    private val keywordFetchSize = 20  // 키워드당 API 요청 개수 (최대 20개까지 요금 동일하므로 최대로 설정)
     private val weightScoreMultiplier = 100.0
     private val likeScoreMultiplier = 50.0  // 좋아요 비중 증가 (15.0 → 50.0)
 
@@ -73,27 +73,30 @@ class ExecutePlaceSearchService(
             return@supervisorScope PlacesSearchResponse(emptyList())
         }
 
-        // 가중치 기반으로 정렬 후 상위 (결과 + 여분) 개수만큼 상세 조회
+        // 가중치 기반으로 정렬 후 상위 (결과 + 여분) 개수만큼 선택
         val candidatePlaces = (keywordResult.places + keywordResult.fallbackPlaces)
             .distinctBy { it.id }
         val placesToProcess = candidatePlaces
             .sortedByDescending { keywordResult.placeWeights[it.id] ?: 0.0 }
             .take(totalFetchSize + photoFallbackBuffer)
-        val allPlaceDetails = placeDetailsProcessor.fetchPlaceDetailsInParallel(placesToProcess)
-
-        if (allPlaceDetails.isEmpty()) {
-            logger.info("PlaceDetails 결과 없음 - keywords={}, meetingId={}", keywordResult.usedKeywords, request.meetingId)
+        
+        val savedEntities = withContext(Dispatchers.IO) {
+            placeQuery.savePlacesFromTextSearch(placesToProcess)
+        }
+        
+        if (savedEntities.isEmpty()) {
+            logger.info("검색된 장소의 DB 저장 결과 없음 - keywords={}, meetingId={}", keywordResult.usedKeywords, request.meetingId)
             return@supervisorScope PlacesSearchResponse(emptyList())
         }
 
         val meetingPlaces = if (request.meetingId != null) {
-            val placeDbIds = getPlaceDbIds(allPlaceDetails.map { it.placeId })
+            val placeDbIds = savedEntities.mapNotNull { it.id }
             createOrGetMeetingPlaces(request.meetingId, placeDbIds)
         } else {
             emptyList()
         }
 
-        val googlePlaceIds = allPlaceDetails.map { it.placeId }
+        val googlePlaceIds = savedEntities.mapNotNull { it.googlePlaceId }
         val placeIdMap = getPlaceStringIdToDbIdMap(googlePlaceIds)
         val placeWeightByDbId = keywordResult.placeWeights.mapNotNull { (googleId, weight) ->
             placeIdMap[googleId]?.let { it to weight }
@@ -105,42 +108,47 @@ class ExecutePlaceSearchService(
             emptyMap()
         }
 
-        val items = allPlaceDetails.mapNotNull { detail ->
+        val items = savedEntities.mapNotNull { entity ->
             runCatching {
-                val placeDbId = placeIdMap[detail.placeId]
-                    ?: throw IllegalStateException("DB Place ID 없음: googlePlaceId=${detail.placeId}, name=${detail.name}")
-                val likeInfo = likesMap[detail.placeId] ?: PlaceLikeInfo(0, false)
+                val googleId = entity.googlePlaceId ?: return@mapNotNull null
+                val placeDbId = entity.id ?: return@mapNotNull null
+                val likeInfo = likesMap[googleId] ?: PlaceLikeInfo(0, false)
 
                 PlacesSearchResponse.PlaceItem(
                     placeId = placeDbId,
-                    name = detail.name,
-                    address = detail.address,
-                    rating = detail.rating,
-                    userRatingsTotal = detail.userRatingsTotal,
-                    openNow = detail.openNow,
-                    photos = detail.photos,
-                    link = detail.link,
-                    weekdayText = detail.weekdayText,
-                    topReview = detail.topReview?.let { review ->
-                        PlacesSearchResponse.PlaceItem.Review(
-                            rating = review.rating,
-                            text = review.text
+                    name = entity.name ?: "",
+                    address = entity.address?.replace("대한민국 ", "") ?: "",
+                    rating = entity.rating,
+                    userRatingsTotal = entity.userRatingsTotal,
+                    openNow = entity.openNow,
+                    photos = entity.photos?.split(",")?.map { photoName ->
+                        // PlaceFormatter를 사용하여 프록시 URL 생성
+                        org.depromeet.team3.place.util.PlaceFormatter.generatePhotoUrl(
+                            photoName, 
+                            googlePlacesApiProperties.proxyBaseUrl
                         )
                     },
-                    priceRange = detail.priceRange?.let { priceRange ->
-                        PlacesSearchResponse.PlaceItem.PriceRange(
-                            startPrice = priceRange.startPrice,
-                            endPrice = priceRange.endPrice
-                        )
+                    link = entity.link ?: "",
+                    weekdayText = entity.weekdayText?.split("\n"),
+                    topReview = run {
+                        val reviewRating = entity.topReviewRating
+                        val reviewText = entity.topReviewText
+                        if (reviewRating != null && reviewText != null) {
+                            PlacesSearchResponse.PlaceItem.Review(
+                                rating = reviewRating.toInt(),
+                                text = reviewText
+                            )
+                        } else null
                     },
-                    addressDescriptor = detail.addressDescriptor?.let { desc ->
+                    priceRange = null, // Text Search에는 가격대 없음
+                    addressDescriptor = entity.addressDescriptor?.let { desc ->
                         PlacesSearchResponse.PlaceItem.AddressDescriptor(description = desc)
                     },
                     likeCount = likeInfo.likeCount,
                     isLiked = likeInfo.isLiked
                 )
             }.onFailure { e ->
-                logger.warn("장소 응답 변환 실패: placeId=${detail.placeId}, error=${e.message}")
+                logger.warn("장소 응답 변환 실패: googleId=${entity.googlePlaceId}, error=${e.message}")
             }.getOrNull()
         }
 
@@ -490,14 +498,8 @@ class ExecutePlaceSearchService(
             logger.error("Google Places API 호출 실패: query=$sanitizedQuery", e)
             throw PlaceSearchException(
                 ErrorCode.PLACE_SEARCH_FAILED,
-                detail = mapOf("query" to sanitizedQuery, "error" to e.message)
+                    detail = mapOf("query" to sanitizedQuery, "error" to e.message)
             )
-        }
-    }
-
-    private suspend fun getPlaceDbIds(googlePlaceIds: List<String>): List<Long> {
-        return withContext(Dispatchers.IO) {
-            placeQuery.findByGooglePlaceIds(googlePlaceIds).mapNotNull { it.id }
         }
     }
 
@@ -513,7 +515,7 @@ class ExecutePlaceSearchService(
         }
     }
 
-    private suspend fun createOrGetMeetingPlaces(meetingId: Long, placeDbIds: List<Long>): List<MeetingPlace> {
+    private suspend fun createOrGetMeetingPlaces(meetingId: Long, placeDbIds: List<Long>): List<MeetingPlace> = withContext(Dispatchers.IO) {
         val existingMeetingPlaces = meetingPlaceRepository.findByMeetingId(meetingId)
         val existingPlaceIds = existingMeetingPlaces.map { it.placeId }.toSet()
 
@@ -526,7 +528,7 @@ class ExecutePlaceSearchService(
                 )
             }
 
-        return if (newMeetingPlaces.isNotEmpty()) {
+        if (newMeetingPlaces.isNotEmpty()) {
             val saved = meetingPlaceRepository.saveAll(newMeetingPlaces)
             existingMeetingPlaces + saved
         } else {

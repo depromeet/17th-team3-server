@@ -65,3 +65,4 @@ module-infra/nginx/.htpasswd
 
 # nGrinder data
 ssolv-infrastructure/ngrinder/
+*/bin
