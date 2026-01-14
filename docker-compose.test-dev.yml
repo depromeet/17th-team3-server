@@ -59,5 +59,69 @@ services:
     networks:
       - ngrinder_network
 
+  core-server-test:
+    container_name: core-server-test
+    image: registry.ssolv.site/core-server:latest
+    pull_policy: never
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_URL=jdbc:mysql://host.docker.internal:3306/${DEFAULT_SCHEMA}
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0
+      - OTLP_ENDPOINT=http://alloy:4318/v1/traces
+      # 필수 환경 변수
+      - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
+      - JWT_SECRET=${JWT_SECRET}
+      - GOOGLE_PLACES_API_KEY=${GOOGLE_PLACES_API_KEY}
+    networks:
+      ngrinder_network:
+        aliases:
+          - core-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  place-server-test:
+    container_name: place-server-test
+    image: registry.ssolv.site/place-server:latest
+    pull_policy: never
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_URL=jdbc:mysql://host.docker.internal:3306/${DEFAULT_SCHEMA}
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0
+      - OTLP_ENDPOINT=http://alloy:4318/v1/traces
+      - GOOGLE_PLACES_API_KEY=${GOOGLE_PLACES_API_KEY}
+    networks:
+      ngrinder_network:
+        aliases:
+          - place-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    mem_limit: 1024m
+    mem_reservation: 512m
+
+  nginx-test:
+    container_name: nginx-test
+    image: nginx:1.29.0
+    ports:
+      - "80:80"
+    volumes:
+      - ./ssolv-infrastructure/nginx/nginx-app.conf:/etc/nginx/nginx.conf:ro
+    environment:
+      - TZ=Asia/Seoul
+    networks:
+      - ngrinder_network
+    restart: always
+    depends_on:
+      - core-server-test
+      - place-server-test
+    mem_limit: 256m
+
 networks:
   ngrinder_network:
