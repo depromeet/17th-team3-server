@@ -63,7 +63,6 @@ out/
 # nginx auth files
 module-infra/nginx/.htpasswd
 
-# nGrinder data
-ssolv-infrastructure/ngrinder/
 
+ssolv-infrastructure/ngrinder/*
 */bin/
