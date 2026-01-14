@@ -46,6 +46,17 @@ class UserIdArgumentResolver : HandlerMethodArgumentResolver {
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?
     ): Any? {
+        // 테스트용 X-User-Id 헤더 지원
+        val xUserId = webRequest.getHeader("X-User-Id")
+        logger.debug("X-User-Id header: {}", xUserId)
+        if (xUserId != null) {
+            val userId = xUserId.toLongOrNull()
+            if (userId != null) {
+                MDC.put(USER_ID, userId.toString())
+                return userId
+            }
+        }
+
         val authentication = SecurityContextHolder.getContext().authentication
         
         // JWT 인증 토큰이 아닌 경우
