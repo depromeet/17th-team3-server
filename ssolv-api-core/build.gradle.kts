@@ -42,7 +42,7 @@ tasks {
 
 jib {
     from {
-        image = "eclipse-temurin:17-jre"
+        image = "eclipse-temurin:21-jre"
     }
     to {
         image = "registry.ssolv.site/core-server"
@@ -55,5 +55,8 @@ jib {
         )
         ports = listOf("8080")
         creationTime = "USE_CURRENT_TIMESTAMP"
+    }
+    dockerClient {
+        executable = "/usr/local/bin/docker"
     }
 }

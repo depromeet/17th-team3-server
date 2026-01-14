@@ -17,6 +17,11 @@ kapt {
     }
 }
 
+repositories {
+    mavenCentral()
+    maven { url = uri("https://repo.navercorp.com/maven/releases") }
+}
+
 dependencies {
     implementation(project(":ssolv-global-utils"))
     implementation(project(":ssolv-domain"))
@@ -52,6 +57,8 @@ dependencies {
     testImplementation("org.mockito:mockito-core")
     testImplementation("org.mockito:mockito-junit-jupiter")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+
+    compileOnly("org.ngrinder:ngrinder-groovy:3.5.9-p1")
 }
 
 tasks {
