@@ -2,7 +2,7 @@ package org.depromeet.team3.place.application.search
 
 import kotlinx.coroutines.slf4j.MDCContext
 import kotlinx.coroutines.withContext
-import org.depromeet.team3.place.application.plan.CreatePlaceSearchPlanService
+import org.depromeet.team3.place.application.search.planner.CreatePlaceSearchPlanService
 import org.depromeet.team3.place.dto.request.PlacesSearchRequest
 import org.depromeet.team3.place.dto.response.PlacesSearchResponse
 import org.springframework.stereotype.Service

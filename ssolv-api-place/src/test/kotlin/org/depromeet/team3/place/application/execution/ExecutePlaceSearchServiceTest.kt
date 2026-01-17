@@ -7,8 +7,8 @@ import org.depromeet.team3.meetingplace.MeetingPlace
 import org.depromeet.team3.meetingplace.MeetingPlaceRepository
 import org.depromeet.team3.place.PlaceEntity
 import org.depromeet.team3.place.PlaceQuery
-import org.depromeet.team3.place.application.model.PlaceSearchPlan
-import org.depromeet.team3.place.application.plan.CreateSurveyKeywordService
+import org.depromeet.team3.place.application.search.model.PlaceSearchPlan
+import org.depromeet.team3.place.application.search.support.CreateSurveyKeywordService
 import org.depromeet.team3.place.application.search.ExecutePlaceSearchService
 import org.depromeet.team3.place.application.search.ManageMeetingPlaceService
 import org.depromeet.team3.place.dto.request.PlacesSearchRequest

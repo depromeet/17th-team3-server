@@ -1,4 +1,4 @@
-package org.depromeet.team3.place.application.photo
+package org.depromeet.team3.place.application.search
 
 import kotlinx.coroutines.CancellationException
 

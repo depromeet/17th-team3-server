@@ -1,14 +1,15 @@
 package org.depromeet.team3.place.client
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.depromeet.team3.common.GooglePlacesApiProperties
 import org.depromeet.team3.common.exception.ErrorCode
 import org.depromeet.team3.place.exception.PlaceSearchException
+import org.depromeet.team3.place.model.PlaceDetailsResponse
 import org.depromeet.team3.place.model.PlacesTextSearchRequest
 import org.depromeet.team3.place.model.PlacesTextSearchResponse
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -51,6 +52,8 @@ class GooglePlacesClient(
         for (attempt in 0 until maxRetries) {
             try {
                 return block()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: HttpClientErrorException) {
                 val statusCode = e.statusCode.value()
                 if (statusCode in listOf(401, 404)) {
@@ -130,76 +133,80 @@ class GooglePlacesClient(
             operation = "텍스트 검색",
             operationDetail = "query=$query"
         ) {
-            try {
-                withTimeout(apiTimeoutMillis) {
-                    val locationBias = if (latitude != null && longitude != null) {
-                        PlacesTextSearchRequest.LocationBias(
-                            circle = PlacesTextSearchRequest.LocationBias.Circle(
-                                center = PlacesTextSearchRequest.LocationBias.Circle.Center(
-                                    latitude = latitude,
-                                    longitude = longitude
-                                ),
-                                radius = radius
-                            )
+            withTimeout(apiTimeoutMillis) {
+                val locationBias = if (latitude != null && longitude != null) {
+                    PlacesTextSearchRequest.LocationBias(
+                        circle = PlacesTextSearchRequest.LocationBias.Circle(
+                            center = PlacesTextSearchRequest.LocationBias.Circle.Center(
+                                latitude = latitude,
+                                longitude = longitude
+                            ),
+                            radius = radius
                         )
-                    } else null
-                    
-                    val request = PlacesTextSearchRequest(
-                        textQuery = query,
-                        languageCode = "ko",
-                        maxResultCount = maxResults,
-                        locationBias = locationBias
                     )
-
-                    val response = googlePlacesRestClient.post()
-                        .uri("/v1/places:searchText")
-                        .header("X-Goog-Api-Key", googlePlacesApiProperties.apiKey)
-                        .header("X-Goog-FieldMask", buildTextSearchFieldMask())
-                        .body(request)
-                        .retrieve()
-                        .body(PlacesTextSearchResponse::class.java)
+                } else null
                 
-                    response ?: throw PlaceSearchException(
-                        errorCode = ErrorCode.PLACE_API_RESPONSE_NULL,
-                        detail = mapOf("query" to query)
-                    )
-                }
-            } catch (e: TimeoutCancellationException) {
-                logger.error(e) { "Google Places API 텍스트 검색 타임아웃: query=$query" }
-                throw PlaceSearchException(
-                    ErrorCode.PLACE_API_ERROR,
-                    detail = mapOf("query" to query, "error" to "요청 타임아웃 (${apiTimeoutMillis}ms 초과)")
+                val request = PlacesTextSearchRequest(
+                    textQuery = query,
+                    languageCode = "ko",
+                    maxResultCount = maxResults,
+                    locationBias = locationBias
                 )
-            } catch (e: Exception) {
-                throw e
+
+                val response = googlePlacesRestClient.post()
+                    .uri("/v1/places:searchText")
+                    .header("X-Goog-Api-Key", googlePlacesApiProperties.apiKey)
+                    .header("X-Goog-FieldMask", buildTextSearchFieldMask())
+                    .body(request)
+                    .retrieve()
+                    .body(PlacesTextSearchResponse::class.java)
+            
+                response ?: throw PlaceSearchException(
+                    errorCode = ErrorCode.PLACE_API_RESPONSE_NULL,
+                    detail = mapOf("query" to query)
+                )
             }
         }
     }
 
     /**
-     * 사진 데이터 조회 (New API)
+     * 사진 데이터 조회
      */
     suspend fun fetchPhoto(photoName: String, maxHeightPx: Int = 1000, maxWidthPx: Int = 1000): ByteArray? = withContext(Dispatchers.IO) {
         retryWithExponentialBackoff(
             operation = "사진 데이터 조회",
             operationDetail = "photoName=$photoName"
         ) {
-            try {
-                withTimeout(apiTimeoutMillis) {
-                    googlePlacesRestClient.get()
-                        .uri { uriBuilder ->
-                            uriBuilder.path("/v1/{photoName}/media")
-                                .queryParam("maxHeightPx", maxHeightPx)
-                                .queryParam("maxWidthPx", maxWidthPx)
-                                .queryParam("key", googlePlacesApiProperties.apiKey)
-                                .build(photoName)
-                        }
-                        .retrieve()
-                        .body(ByteArray::class.java)
-                }
-            } catch (e: Exception) {
-                logger.error(e) { "Google Places API 사진 조회 실패: photoName=$photoName" }
-                null
+            withTimeout(apiTimeoutMillis) {
+                googlePlacesRestClient.get()
+                    .uri { uriBuilder ->
+                        uriBuilder.path("/v1/{photoName}/media")
+                            .queryParam("maxHeightPx", maxHeightPx)
+                            .queryParam("maxWidthPx", maxWidthPx)
+                            .queryParam("key", googlePlacesApiProperties.apiKey)
+                            .build(photoName)
+                    }
+                    .retrieve()
+                    .body(ByteArray::class.java)
+            }
+        }
+    }
+
+    /**
+     * 장소 상세 정보 조회
+     */
+    suspend fun getPlaceDetails(placeId: String): PlaceDetailsResponse? = withContext(Dispatchers.IO) {
+        retryWithExponentialBackoff(
+            operation = "장소 상세 조회",
+            operationDetail = "placeId=$placeId"
+        ) {
+            withTimeout(apiTimeoutMillis) {
+                googlePlacesRestClient.get()
+                    .uri("/v1/places/$placeId")
+                    .header("X-Goog-Api-Key", googlePlacesApiProperties.apiKey)
+                    .header("X-Goog-FieldMask", buildDetailsFieldMask())
+                    .retrieve()
+                    .body(PlaceDetailsResponse::class.java)
             }
         }
     }
@@ -216,7 +223,20 @@ class GooglePlacesClient(
             "places.userRatingCount",
             "places.photos",
             "places.location",
-            "places.types"
+            "places.types",
+            "places.currentOpeningHours"
+        ).joinToString(",")
+    }
+
+    private fun buildDetailsFieldMask(): String {
+        return listOf(
+            "id",
+            "displayName",
+            "formattedAddress",
+            "rating",
+            "userRatingCount",
+            "location",
+            "types"
         ).joinToString(",")
     }
 }

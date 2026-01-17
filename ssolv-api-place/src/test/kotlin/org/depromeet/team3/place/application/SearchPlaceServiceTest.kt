@@ -3,9 +3,9 @@ package org.depromeet.team3.place.application
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.depromeet.team3.place.application.search.SearchPlaceService
-import org.depromeet.team3.place.application.plan.CreatePlaceSearchPlanService
+import org.depromeet.team3.place.application.search.planner.CreatePlaceSearchPlanService
 import org.depromeet.team3.place.application.search.ExecutePlaceSearchService
-import org.depromeet.team3.place.application.model.PlaceSearchPlan
+import org.depromeet.team3.place.application.search.model.PlaceSearchPlan
 import org.depromeet.team3.place.dto.request.PlacesSearchRequest
 import org.depromeet.team3.place.dto.response.PlacesSearchResponse
 import org.junit.jupiter.api.BeforeEach

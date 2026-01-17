@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.depromeet.team3.common.ContextConstants
 import org.depromeet.team3.common.annotation.UserId
 import org.depromeet.team3.common.response.DpmApiResponse
-import org.depromeet.team3.place.application.photo.GetPlacePhotoService
+import org.depromeet.team3.place.application.search.GetPlacePhotoService
 import org.depromeet.team3.place.application.search.SearchPlaceService
 import org.depromeet.team3.place.dto.request.PlacesSearchRequest
 import org.depromeet.team3.place.dto.response.PlacesSearchResponse
