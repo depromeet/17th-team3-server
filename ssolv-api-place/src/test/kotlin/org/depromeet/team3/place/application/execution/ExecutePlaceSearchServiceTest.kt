@@ -1,8 +1,6 @@
 package org.depromeet.team3.place.application.execution
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.depromeet.team3.common.GooglePlacesApiProperties
 import org.depromeet.team3.meetingplace.MeetingPlace
@@ -11,6 +9,8 @@ import org.depromeet.team3.place.PlaceEntity
 import org.depromeet.team3.place.PlaceQuery
 import org.depromeet.team3.place.application.model.PlaceSearchPlan
 import org.depromeet.team3.place.application.plan.CreateSurveyKeywordService
+import org.depromeet.team3.place.application.search.ExecutePlaceSearchService
+import org.depromeet.team3.place.application.search.ManageMeetingPlaceService
 import org.depromeet.team3.place.dto.request.PlacesSearchRequest
 import org.depromeet.team3.place.model.PlacesTextSearchResponse
 import org.depromeet.team3.placelike.PlaceLikeRepository
@@ -28,7 +28,7 @@ class ExecutePlaceSearchServiceTest {
     private lateinit var placeQuery: FakePlaceQuery
     private lateinit var meetingPlaceRepository: MeetingPlaceRepository
     private lateinit var placeLikeRepository: PlaceLikeRepository
-    private lateinit var searchService: MeetingPlaceSearchService
+    private lateinit var searchService: ManageMeetingPlaceService
     private lateinit var googlePlacesApiProperties: GooglePlacesApiProperties
 
     private lateinit var service: ExecutePlaceSearchService

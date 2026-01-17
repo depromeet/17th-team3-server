@@ -7,8 +7,8 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.depromeet.team3.common.ContextConstants
 import org.depromeet.team3.common.annotation.UserId
 import org.depromeet.team3.common.response.DpmApiResponse
-import org.depromeet.team3.place.application.execution.PlacePhotoService
-import org.depromeet.team3.place.application.facade.GetPlacesService
+import org.depromeet.team3.place.application.photo.GetPlacePhotoService
+import org.depromeet.team3.place.application.search.SearchPlaceService
 import org.depromeet.team3.place.dto.request.PlacesSearchRequest
 import org.depromeet.team3.place.dto.response.PlacesSearchResponse
 import org.springframework.http.CacheControl
@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit
 @RestController
 @RequestMapping("${ContextConstants.API_VERSION_V1}/places")
 class PlacesSearchController(
-    private val getPlacesService: GetPlacesService,
-    private val placePhotoService: PlacePhotoService
+    private val searchPlaceService: SearchPlaceService,
+    private val getPlacePhotoService: GetPlacePhotoService
 ) {
     @Operation(
         summary = "맛집 데이터 검색",
@@ -41,7 +41,7 @@ class PlacesSearchController(
             meetingId = meetingId,
             userId = userId
         )
-        val response = getPlacesService.textSearch(request)
+        val response = searchPlaceService.textSearch(request)
         return DpmApiResponse.ok(response)
     }
 
@@ -53,7 +53,7 @@ class PlacesSearchController(
     suspend fun getPhoto(
         @PathVariable photoName: String
     ): ResponseEntity<ByteArray> {
-        val photoData = placePhotoService.getPhoto(photoName)
+        val photoData = getPlacePhotoService.getPhoto(photoName)
             ?: return ResponseEntity.notFound().build()
 
         return ResponseEntity.ok()
