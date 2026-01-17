@@ -1,4 +1,4 @@
-package org.depromeet.team3.place.application.plan
+package org.depromeet.team3.place.application.search.planner
 
 import org.assertj.core.api.Assertions.assertThat
 import org.depromeet.team3.place.application.search.model.PlaceSurveySummary
